@@ -8,6 +8,7 @@ import datetime
 from models import get_budgets, create_feedback
 from credits import ApproveCreditRequestForm, fix_ficore_credit_balances
 from utils import get_mongo_db, logger, get_user_query
+from translations import trans
 
 admin_bp = Blueprint('admin', __name__, template_folder='templates/admin')
 
@@ -347,3 +348,4 @@ def admin_delete_budget(budget_id):
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
 
         return redirect(url_for('admin.admin_budgets'))
+
