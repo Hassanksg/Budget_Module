@@ -12,7 +12,7 @@ from io import BytesIO
 from flask_wtf import FlaskForm
 from wtforms import DateField, SubmitField
 from wtforms.validators import Optional
-from helpers.branding_helpers import draw_ficore_pdf_header
+from branding_helpers import draw_ficore_pdf_header
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
@@ -321,3 +321,4 @@ def generate_customer_report_pdf(report_data):
     buffer.seek(0)
 
     return Response(buffer, mimetype='application/pdf', headers={'Content-Disposition': 'attachment;filename=customer_report.pdf'})
+
