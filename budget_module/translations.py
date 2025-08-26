@@ -32,7 +32,7 @@ lock = threading.Lock()
 # Import translation modules
 try:
     # Personal Finance Tools
-    from budget_translations import BUDGET_TRANSLATIONS    
+    from budget_translations import BUDGET_TRANSLATIONS
 except ImportError as e:
     logger.error(f"Failed to import translation module: {str(e)}", exc_info=True)
     raise
@@ -40,12 +40,11 @@ except ImportError as e:
 # Map module names to translation dictionaries
 translation_modules = {
     'budget': BUDGET_TRANSLATIONS,
-    
+}
+
 # Map key prefixes to module names
 KEY_PREFIX_TO_MODULE = {
     'budget_': 'budget',
-    'admin_': 'admin',
-    'reports_': 'reports',
 }
 
 # Log loaded translations
@@ -53,6 +52,11 @@ for module_name, translations in translation_modules.items():
     for lang in ['en', 'ha']:
         lang_dict = translations.get(lang, {})
         logger.info(f"Loaded {len(lang_dict)} translations for module '{module_name}', lang='{lang}'")
+
+GENERAL_SPECIFIC_KEYS = {
+    'general_welcome',
+    'bill_submit',
+}
 
 def trans(key: str, lang: Optional[str] = None, default: Optional[str] = None, **kwargs: str) -> str:
     """
@@ -93,6 +97,7 @@ def trans(key: str, lang: Optional[str] = None, default: Optional[str] = None, *
     # Default to session language or 'en'
     if lang is None:
         lang = session.get('lang', 'en') if has_request_context() else 'en'
+
     if lang not in ['en', 'ha']:
         with lock:
             if f"invalid_language_{lang}" not in logged_missing_keys:
@@ -102,18 +107,16 @@ def trans(key: str, lang: Optional[str] = None, default: Optional[str] = None, *
 
     # Determine module based on key prefix or specific keys
     module_name = 'general'  # Default to general
-    
     # Check for specific prefix mappings
     for prefix, mod in KEY_PREFIX_TO_MODULE.items():
         if key.startswith(prefix):
             module_name = mod
             break
-    
     # Check for general-specific keys (common UI elements)
     if key in GENERAL_SPECIFIC_KEYS:
         module_name = 'general'
 
-    module = translation_modules.get(module_name, translation_modules['general'])
+    module = translation_modules.get(module_name, translation_modules['budget'])
     lang_dict = module.get(lang, {})
 
     # Get translation
@@ -138,7 +141,7 @@ def trans(key: str, lang: Optional[str] = None, default: Optional[str] = None, *
             return translation.format(**kwargs)
         except KeyError as e:
             with lock:
-                error_key = f"formatting_error_{key}_{lang}"
+                error_key = f"formatting_error_{key}{lang}"
                 if error_key not in logged_missing_keys:
                     logged_missing_keys.add(error_key)
                     current_logger.error(
@@ -148,7 +151,7 @@ def trans(key: str, lang: Optional[str] = None, default: Optional[str] = None, *
             return translation  # Return unformatted string as fallback
         except ValueError as e:
             with lock:
-                error_key = f"formatting_error_{key}_{lang}"
+                error_key = f"formatting_error{key}_{lang}"
                 if error_key not in logged_missing_keys:
                     logged_missing_keys.add(error_key)
                     current_logger.error(
@@ -156,15 +159,16 @@ def trans(key: str, lang: Optional[str] = None, default: Optional[str] = None, *
                         extra={'session_id': session_id}
                     )
             return translation  # Return unformatted string as fallback
+
     return translation
 
 def get_translations(lang: Optional[str] = None) -> Dict[str, callable]:
     """
     Return a dictionary with a trans callable for the specified language.
-
+    
     Args:
         lang: Language code ('en', 'ha'). Defaults to session['lang'] or 'en'.
-
+    
     Returns:
         A dictionary with a 'trans' function that translates keys for the specified language.
     """
@@ -221,4 +225,4 @@ def register_translation(app):
             # Default to 'en' or use request headers/user settings as needed
             session['lang'] = request.accept_languages.best_match(['en', 'ha'], 'en')
 
-__all__ = ['trans', 'get_translations', 'get_all_translations', 'get_module_translations', 'register_translation']
+all = ['trans', 'get_translations', 'get_all_translations', 'get_module_translations', 'register_translation']
