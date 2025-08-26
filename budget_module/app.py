@@ -396,5 +396,5 @@ app = create_app()
 
 if __name__ == '__main__':
     logger.info('Starting Flask application')
-
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
+    port = int(os.environ.get('PORT', 1000))  # Use 1000 as fallback for consistency
+    app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
