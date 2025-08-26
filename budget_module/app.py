@@ -18,20 +18,20 @@ import certifi
 from flask_login import LoginManager, login_required, current_user, UserMixin, logout_user
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from jinja2.exceptions import TemplateNotFound
-from .utils import get_mongo_db, logger, trans_function, initialize_tools_with_urls
-from .models import initialize_app_data, create_user, get_user_by_email
+from utils import get_mongo_db, logger, trans_function, initialize_tools_with_urls
+from models import initialize_app_data, create_user, get_user_by_email
 # Register only budget-related blueprints
-from .routes import budget_bp
-from .credits import credits_bp
-from .reports import reports_bp
+from budget import budget_bp
+from credits import credits_bp
+from reports import reports_bp
 # Minimal general routes for landing/home
-from .general import general_bp
+from general import general_bp
 # User routes for login
-from .users import users_bp
+from users import users_bp
 # Admin routes for credit approvals and budget management
-from .admin import admin_bp
+from admin import admin_bp
 # Settings for profile
-from .settings import settings_bp
+from settings import settings_bp
 
 # Load environment variables
 load_dotenv()
@@ -363,4 +363,5 @@ app = create_app()
 
 if __name__ == '__main__':
     logger.info('Starting Flask application')
+
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
