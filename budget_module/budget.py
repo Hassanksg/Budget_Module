@@ -14,6 +14,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
 from io import BytesIO
 from reports import draw_ficore_pdf_header
+from translations import trans
 
 budget_bp = Blueprint(
     'budget',
@@ -828,4 +829,5 @@ def generate_tips_and_insights(latest_budget):
         logger.warning(f"Error generating insights: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
 
     return tips, insights
+
 
