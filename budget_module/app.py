@@ -32,6 +32,7 @@ from users import users_bp
 from admin import admin_bp
 # Settings for profile
 from settings import settings_bp
+from translations import trans
 
 # Load environment variables
 load_dotenv()
@@ -365,3 +366,4 @@ if __name__ == '__main__':
     logger.info('Starting Flask application')
 
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
+
