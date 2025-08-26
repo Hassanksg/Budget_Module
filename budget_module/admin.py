@@ -4,11 +4,10 @@ from flask import Blueprint, request, session as flask_session, redirect, url_fo
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from wtforms import SelectField, SubmitField, validators
-from ..translations import trans
 import datetime
-from ..models import get_budgets, create_feedback
-from ..credits import ApproveCreditRequestForm, fix_ficore_credit_balances
-from ..utils import get_mongo_db, logger, get_user_query
+from models import get_budgets, create_feedback
+from credits import ApproveCreditRequestForm, fix_ficore_credit_balances
+from utils import get_mongo_db, logger, get_user_query
 
 admin_bp = Blueprint('admin', __name__, template_folder='templates/admin')
 
@@ -346,4 +345,5 @@ def admin_delete_budget(budget_id):
         logger.error(f"Error deleting budget {budget_id}: {str(e)}",
                      extra={'session_id': flask_session.get('sid', 'no-session-id'), 'user_id': current_user.id})
         flash(trans('admin_database_error', default='An error occurred while accessing the database'), 'danger')
+
         return redirect(url_for('admin.admin_budgets'))
