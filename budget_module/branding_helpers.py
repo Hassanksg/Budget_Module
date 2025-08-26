@@ -1,7 +1,7 @@
 from flask import current_app
 from reportlab.lib.utils import ImageReader
 from reportlab.lib import colors
-from ..utils import get_mongo_db
+from utils import get_mongo_db
 
 # Updated Ficore color palette from style guide
 FICORE_PRIMARY_COLOR = "#1E3A8A"  # Deep Blue
@@ -92,4 +92,5 @@ def ficore_csv_header(user):
         [f"Username: {user_display} | Email: {user_email}"],
         [f"Ficore Credits: {credit_balance}"],
         []
+
     ]
