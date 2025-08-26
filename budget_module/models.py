@@ -5,6 +5,7 @@ from pymongo.errors import DuplicateKeyError, OperationFailure, PyMongoError, Wr
 from utils import get_mongo_db, logger
 from werkzeug.security import generate_password_hash
 import uuid
+from translations import trans
 
 def get_db():
     """
@@ -441,4 +442,5 @@ def to_dict_ficore_credit_transaction(transaction):
         'budget_id': transaction.get('budget_id', None)
 
     }
+
 
