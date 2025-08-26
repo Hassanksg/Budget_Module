@@ -9,8 +9,8 @@ from flask_login import login_required, current_user, login_user, logout_user
 from pymongo import errors
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
-from ..utils import get_mongo_db, logger, trans, is_valid_email
-from ..models import create_user
+from utils import get_mongo_db, logger, trans, is_valid_email
+from models import create_user
 
 users_bp = Blueprint('users', __name__, template_folder='templates/users')
 
@@ -440,4 +440,5 @@ def logout():
         response.headers['Expires'] = '0'
         response.set_cookie(current_app.config['SESSION_COOKIE_NAME'], '', expires=0, httponly=True, secure=current_app.config.get('SESSION_COOKIE_SECURE', True))
         response.set_cookie('remember_token', '', expires=0, httponly=True, secure=True)
+
         return response
