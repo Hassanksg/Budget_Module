@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 from utils import get_mongo_db, logger, check_ficore_credit_balance, format_date, cache
 from datetime import datetime
 from bson import ObjectId
-from ..models import log_tool_usage, create_budget
+from models import log_tool_usage, create_budget
 import uuid
 import bleach
 from reportlab.pdfgen import canvas
@@ -828,3 +828,4 @@ def generate_tips_and_insights(latest_budget):
         logger.warning(f"Error generating insights: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
 
     return tips, insights
+
