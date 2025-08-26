@@ -8,7 +8,7 @@ from utils import get_mongo_db, logger, get_user_query
 from users import get_post_login_redirect
 from translations import trans
 
-general_bp = Blueprint('general_bp', __name__, url_prefix='/general')
+general_bp = Blueprint('general_bp', __name__, url_prefix='/general', template_folder='templates', static_folder='static')
 
 @general_bp.route('/landing')
 def landing():
@@ -25,6 +25,15 @@ def landing():
             background_color='#FFF8F0'  # Soft Cream background
         )
         return response
+    except TemplateNotFound:
+        current_app.logger.error(f"Template 'general/landingpage.html' not found", extra={'session_id': session.get('sid', 'unknown')})
+        flash(trans('general_error', default='An error occurred'), 'danger')
+        return render_template(
+            'general/error.html',
+            error_message="Unable to load the landing page due to a missing template.",
+            title=trans('general_welcome', lang=session.get('lang', 'en'), default='Welcome'),
+            background_color='#FFF8F0'
+        ), 500
     except Exception as e:
         current_app.logger.error(f"Error rendering landing page: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
         flash(trans('general_error', default='An error occurred'), 'danger')
@@ -43,24 +52,42 @@ def home():
         flash(trans('general_access_denied', default='You do not have permission to access this page.'), 'danger')
         return redirect(url_for('general_bp.landing'))
     
-    return render_template(
-        'general/home.html',
-        title=trans('general_business_home', lang=session.get('lang', 'en'), default='Home'),
-        background_color='#FFF8F0',  # Soft Cream background
-        button_color='#1E3A8A'  # Deep Blue for buttons
-    )
+    try:
+        return render_template(
+            'general/home.html',
+            title=trans('general_business_home', lang=session.get('lang', 'en'), default='Home'),
+            background_color='#FFF8F0',  # Soft Cream background
+            button_color='#1E3A8A'  # Deep Blue for buttons
+        )
+    except TemplateNotFound:
+        current_app.logger.error(f"Template 'general/home.html' not found", extra={'session_id': session.get('sid', 'unknown')})
+        return render_template(
+            'general/error.html',
+            error_message="Unable to load the home page due to a missing template.",
+            title=trans('general_business_home', lang=session.get('lang', 'en'), default='Home'),
+            background_color='#FFF8F0'
+        ), 500
 
 @general_bp.route('/access_denied')
 @login_required
 def access_denied():
     """Render a friendly access denied page."""
-    return render_template(
-        'general/access_denied.html',
-        title=trans('access_denied', default='Access Denied', lang=session.get('lang', 'en')),
-        message=trans('general_access_denied', default='You do not have permission to access this page.', lang=session.get('lang', 'en')),
-        background_color='#FFF8F0',  # Soft Cream background
-        text_color='#2E2E2E'  # Dark Gray for text
-    ), 403
+    try:
+        return render_template(
+            'general/access_denied.html',
+            title=trans('access_denied', default='Access Denied', lang=session.get('lang', 'en')),
+            message=trans('general_access_denied', default='You do not have permission to access this page.', lang=session.get('lang', 'en')),
+            background_color='#FFF8F0',  # Soft Cream background
+            text_color='#2E2E2E'  # Dark Gray for text
+        ), 403
+    except TemplateNotFound:
+        current_app.logger.error(f"Template 'general/access_denied.html' not found", extra={'session_id': session.get('sid', 'unknown')})
+        return render_template(
+            'general/error.html',
+            error_message="Unable to load the access denied page due to a missing template.",
+            title=trans('access_denied', lang=session.get('lang', 'en'), default='Access Denied'),
+            background_color='#FFF8F0'
+        ), 500
 
 @general_bp.route('/feedback', methods=['GET', 'POST'])
 @login_required
@@ -127,16 +154,145 @@ def feedback():
             current_app.logger.error(f'User not found: {str(e)}', extra={'ip_address': request.remote_addr})
             flash(trans('general_error', default='User not found'), 'danger')
             return render_template('general/feedback.html', tool_options=tool_options, title=trans('general_feedback', lang=lang), background_color='#FFF8F0', button_color='#1E3A8A'), 400
+        except TemplateNotFound:
+            current_app.logger.error(f"Template 'general/feedback.html' not found", extra={'ip_address': request.remote_addr})
+            flash(trans('general_error', default='An error occurred'), 'danger')
+            return render_template('general/error.html', error_message="Unable to load the feedback page due to a missing template.", title=trans('general_feedback', lang=lang), background_color='#FFF8F0'), 500
         except Exception as e:
             current_app.logger.error(f'Error processing feedback: {str(e)}', exc_info=True, extra={'ip_address': request.remote_addr})
             flash(trans('general_error', default='Error occurred during feedback submission'), 'danger')
             return render_template('general/feedback.html', tool_options=tool_options, title=trans('general_feedback', lang=lang), background_color='#FFF8F0', button_color='#1E3A8A'), 500
-    return render_template(
-        'general/feedback.html',
-        tool_options=tool_options,
-        title=trans('general_feedback', lang=lang, default='Feedback'),
-        background_color='#FFF8F0',  # Soft Cream background
-        button_color='#1E3A8A'  # Deep Blue for buttons
+    try:
+        return render_template(
+            'general/feedback.html',
+            tool_options=tool_options,
+            title=trans('general_feedback', lang=lang, default='Feedback'),
+            background_color='#FFF8F0',  # Soft Cream background
+            button_color='#1E3A8A'  # Deep Blue for buttons
+        )
+    except TemplateNotFound:
+        current_app.logger.error(f"Template 'general/feedback.html' not found", extra={'session_id': session.get('sid', 'unknown')})
+        return render_template(
+            'general/error.html',
+            error_message="Unable to load the feedback page due to a missing template.",
+            title=trans('general_feedback', lang=lang, default='Feedback'),
+            background_color='#FFF8F0'
+        ), 500
 
-    )
+@general_bp.route('/about')
+def about():
+    """Render the about page."""
+    try:
+        return render_template(
+            'general/about.html',
+            title=trans('general_about', lang=session.get('lang', 'en'), default='About Us'),
+            background_color='#FFF8F0'
+        )
+    except TemplateNotFound:
+        current_app.logger.error(f"Template 'general/about.html' not found", extra={'session_id': session.get('sid', 'unknown')})
+        return render_template(
+            'general/error.html',
+            error_message="Unable to load the about page due to a missing template.",
+            title=trans('general_about', lang=session.get('lang', 'en'), default='About Us'),
+            background_color='#FFF8F0'
+        ), 500
 
+@general_bp.route('/contact', methods=['GET', 'POST'])
+def contact():
+    """Render the contact page and handle form submissions."""
+    lang = session.get('lang', 'en')
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name')
+            email = request.form.get('email')
+            message = request.form.get('message', '').strip()
+            if not name or not email or not message:
+                flash(trans('general_invalid_input', default='Please fill out all required fields'), 'danger')
+                return render_template('general/contact.html', title=trans('general_contact', lang=lang, default='Contact Us'), background_color='#FFF8F0', button_color='#1E3A8A')
+
+            db = get_mongo_db()
+            db.contacts.insert_one({
+                'name': name,
+                'email': email,
+                'message': message,
+                'user_id': current_user.id if current_user.is_authenticated else None,
+                'session_id': session.get('sid', 'no-session-id'),
+                'timestamp': datetime.utcnow()
+            })
+            current_app.logger.info(f"Contact form submitted: name={name}, email={email}", extra={'session_id': session.get('sid', 'no-session-id'), 'ip_address': request.remote_addr})
+            flash(trans('general_thank_you', default='Thank you for your message!'), 'success')
+            return redirect(url_for('general_bp.contact'))
+        except Exception as e:
+            current_app.logger.error(f"Error processing contact form: {str(e)}", extra={'ip_address': request.remote_addr})
+            flash(trans('general_error', default='Error occurred during form submission'), 'danger')
+            return render_template('general/contact.html', title=trans('general_contact', lang=lang, default='Contact Us'), background_color='#FFF8F0', button_color='#1E3A8A'), 500
+
+    try:
+        return render_template(
+            'general/contact.html',
+            title=trans('general_contact', lang=lang, default='Contact Us'),
+            background_color='#FFF8F0',
+            button_color='#1E3A8A'
+        )
+    except TemplateNotFound:
+        current_app.logger.error(f"Template 'general/contact.html' not found", extra={'session_id': session.get('sid', 'unknown')})
+        return render_template(
+            'general/error.html',
+            error_message="Unable to load the contact page due to a missing template.",
+            title=trans('general_contact', lang=lang, default='Contact Us'),
+            background_color='#FFF8F0'
+        ), 500
+
+@general_bp.route('/personal_finance_tips')
+def personal_finance_tips():
+    """Render the personal finance tips page."""
+    try:
+        return render_template(
+            'general/personal_finance_tips.html',
+            title=trans('general_finance_tips', lang=session.get('lang', 'en'), default='Personal Finance Tips'),
+            background_color='#FFF8F0'
+        )
+    except TemplateNotFound:
+        current_app.logger.error(f"Template 'general/personal_finance_tips.html' not found", extra={'session_id': session.get('sid', 'unknown')})
+        return render_template(
+            'general/error.html',
+            error_message="Unable to load the finance tips page due to a missing template.",
+            title=trans('general_finance_tips', lang=session.get('lang', 'en'), default='Personal Finance Tips'),
+            background_color='#FFF8F0'
+        ), 500
+
+@general_bp.route('/privacy')
+def privacy():
+    """Render the privacy policy page."""
+    try:
+        return render_template(
+            'general/privacy.html',
+            title=trans('general_privacy', lang=session.get('lang', 'en'), default='Privacy Policy'),
+            background_color='#FFF8F0'
+        )
+    except TemplateNotFound:
+        current_app.logger.error(f"Template 'general/privacy.html' not found", extra={'session_id': session.get('sid', 'unknown')})
+        return render_template(
+            'general/error.html',
+            error_message="Unable to load the privacy policy page due to a missing template.",
+            title=trans('general_privacy', lang=session.get('lang', 'en'), default='Privacy Policy'),
+            background_color='#FFF8F0'
+        ), 500
+
+@general_bp.route('/terms')
+def terms():
+    """Render the terms of service page."""
+    try:
+        return render_template(
+            'general/terms.html',
+            title=trans('general_terms', lang=session.get('lang', 'en'), default='Terms of Service'),
+            background_color='#FFF8F0'
+        )
+    except TemplateNotFound:
+        current_app.logger.error(f"Template 'general/terms.html' not found", extra={'session_id': session.get('sid', 'unknown')})
+        return render_template(
+            'general/error.html',
+            error_message="Unable to load the terms of service page due to a missing template.",
+            title=trans('general_terms', lang=session.get('lang', 'en'), default='Terms of Service'),
+            background_color='#FFF8F0'
+        ), 500
