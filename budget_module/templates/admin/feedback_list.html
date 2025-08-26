@@ -19,7 +19,9 @@
                 <thead>
                     <tr>
                         <th>{{ t('admin_user_id', default='User ID') }}</th>
-                        <th>{{ t('admin_feedback', default='Feedback') }}</th>
+                        <th>{{ t('admin_tool', default='Tool') }}</th>
+                        <th>{{ t('admin_rating', default='Rating') }}</th>
+                        <th>{{ t('admin_comment', default='Comment') }}</th>
                         <th>{{ t('admin_timestamp', default='Timestamp') }}</th>
                     </tr>
                 </thead>
@@ -27,7 +29,9 @@
                     {% for feedback in feedbacks %}
                     <tr>
                         <td>{{ feedback.user_id }}</td>
-                        <td>{{ feedback.feedback }}</td>
+                        <td>{{ feedback.tool_name }}</td>
+                        <td>{{ feedback.rating }}</td>
+                        <td>{{ feedback.comment }}</td>
                         <td>{{ feedback.timestamp | format_date }}</td>
                     </tr>
                     {% endfor %}
