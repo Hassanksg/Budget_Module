@@ -442,5 +442,78 @@ def to_dict_ficore_credit_transaction(transaction):
         'budget_id': transaction.get('budget_id', None)
 
     }
+# ... [existing code above remains unchanged]
 
+def create_credit_request(db, request_data):
+    """
+    Insert a new credit request document into the credit_requests collection.
+    Args:
+        db: MongoDB database instance
+        request_data: Dictionary containing request info
+    Returns:
+        str: Inserted request ID
+    """
+    try:
+        result = db.credit_requests.insert_one(request_data)
+        return str(result.inserted_id)
+    except Exception as e:
+        logger.error(f"Error creating credit request: {str(e)}", exc_info=True, extra={'session_id': request_data.get('session_id', 'no-session-id')})
+        raise
 
+def update_credit_request(db, request_id, update_data):
+    """
+    Update a credit request document by ID.
+    Args:
+        db: MongoDB database instance
+        request_id: The ID (_id) of the credit request
+        update_data: dict of fields to update
+    Returns:
+        bool: True if updated, False otherwise
+    """
+    from bson import ObjectId
+    try:
+        result = db.credit_requests.update_one(
+            {'_id': ObjectId(request_id)},
+            {'$set': update_data}
+        )
+        return result.modified_count > 0
+    except Exception as e:
+        logger.error(f"Error updating credit request {request_id}: {str(e)}", exc_info=True, extra={'session_id': 'no-session-id'})
+        raise
+
+def get_credit_requests(db, filter_kwargs):
+    """
+    Retrieve credit request documents matching filter.
+    Args:
+        db: MongoDB database instance
+        filter_kwargs: dict of filter criteria
+    Returns:
+        list: List of requests
+    """
+    try:
+        return list(db.credit_requests.find(filter_kwargs).sort('created_at', -1))
+    except Exception as e:
+        logger.error(f"Error fetching credit requests: {str(e)}", exc_info=True, extra={'session_id': 'no-session-id'})
+        raise
+
+def to_dict_credit_request(doc):
+    """
+    Convert a credit request document to a serializable dict.
+    Args:
+        doc: MongoDB document
+    Returns:
+        dict
+    """
+    if not doc:
+        return {}
+    return {
+        'id': str(doc.get('_id', '')),
+        'user_id': doc.get('user_id', ''),
+        'amount': doc.get('amount', 0),
+        'payment_method': doc.get('payment_method', ''),
+        'receipt_file_id': str(doc.get('receipt_file_id', '')) if doc.get('receipt_file_id', '') else None,
+        'status': doc.get('status', ''),
+        'created_at': doc.get('created_at'),
+        'updated_at': doc.get('updated_at', None),
+        'admin_id': doc.get('admin_id', None)
+    }
