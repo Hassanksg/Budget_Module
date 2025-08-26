@@ -64,18 +64,6 @@
                     </div>
                     <div class="personal-action-label">{{ t('budget', default='Budget') }}</div>
                 </a>
-                <a href="{{ url_for('bill.index', _external=True) | e }}" class="personal-quick-action-item personal-bills-management text-decoration-none" aria-label="{{ t('bills', default='Bills') | e }}">
-                    <div class="personal-action-icon-wrapper">
-                        <i class="bi bi-receipt personal-action-icon"></i>
-                    </div>
-                    <div class="personal-action-label">{{ t('bills', default='Bills') }}</div>
-                </a>
-                <a href="{{ url_for('shopping.index', _external=True) | e }}" class="personal-quick-action-item personal-shopping-management text-decoration-none" aria-label="{{ t('shopping', default='Shopping') | e }}">
-                    <div class="personal-action-icon-wrapper">
-                        <i class="bi bi-cart personal-action-icon"></i>
-                    </div>
-                    <div class="personal-action-label">{{ t('shopping', default='Shopping') }}</div>
-                </a>
             </div>
         </section>
 
@@ -92,33 +80,13 @@
                         <div class="personal-status-indicator" id="budgetStatusLabel"></div>
                     </div>
                 </div>
-                <div class="personal-snapshot-item">
-                    <i class="bi bi-receipt text-warning"></i>
-                    <div class="personal-snapshot-content">
-                        <div class="personal-snapshot-label">{{ t('upcoming_bills', default='Kuɗin da ke Jiran Biya') }}</div>
-                        <div class="personal-snapshot-value" id="upcomingBills" data-amount="0">
-                            <span class="personal-currency-symbol">₦</span><span class="personal-amount-value">0.00</span>
-                        </div>
-                        <div class="personal-status-indicator" id="billsStatusLabel"></div>
-                    </div>
-                </div>
-                <div class="personal-snapshot-item">
-                    <i class="bi bi-cart text-info"></i>
-                    <div class="personal-snapshot-content">
-                        <div class="personal-snapshot-label">{{ t('shopping_spending', default='KasheKashen Siyayya') }}</div>
-                        <div class="personal-snapshot-value" id="shoppingSpending" data-amount="0">
-                            <span class="personal-currency-symbol">₦</span><span class="personal-amount-value">0.00</span>
-                        </div>
-                        <div class="personal-status-indicator" id="shoppingStatusLabel"></div>
-                    </div>
-                </div>
             </div>
         </section>
 
         <section class="personal-section-card personal-services-grid-section">
             <h3 class="personal-section-title">{{ t('explore_features', default='Bincika Abubuwan Haɗin') }}</h3>
             <div class="personal-services-grid">
-                {% set allowed_features = ['Budget', 'Bills', 'Shopping'] %}
+                {% set allowed_features = ['Budget'] %}
                 {% for feature in explore_features_for_template %}
                     {% if feature.label in allowed_features %}
                     <a href="{{ feature.url | e }}" class="personal-service-grid-item text-decoration-none" aria-label="{{ t(feature.label_key, default=feature.label) | e }}">
@@ -150,24 +118,15 @@
 {% block extra_scripts %}
 <style>
 .text-budget { color: #007bff; }
-.text-bill { color: #ffc107; }
-.text-shopping { color: #17a2b8; }
 .text-credits { color: #28a745; }
 </style>
 <script>
 window.apiUrls = {
     budgetSummary: "/summaries/budget/summary",
-    billSummary: "/summaries/bill/summary",
-    shoppingSummary: "/summaries/shopping/summary",
     ficoreBalance: "/summaries/ficore_balance",
     recentActivity: "/summaries/recent_activity",
     allActivities: "/summaries/all_activities",
     notifications: "/summaries/notifications",
-    manageShoppingLists: "/shopping/main",
-    manageShoppingItems: "/shopping/lists/{list_id}/items",
-    shareShoppingList: "/shopping/lists/{list_id}/share",
-    shoppingPriceHistory: "/shopping/price_history/{item_name}",
-    predictiveSuggestions: "/shopping/suggestions",
     requestFicoreCredits: "{{ url_for('credits.request_credits', _external=True) | e }}"
 };
 
@@ -251,11 +210,11 @@ function toggleRecentActivities() {
                     activity.icon &&
                     activity.type &&
                     activity.timestamp &&
-                    ['budget', 'bill', 'shopping_list', 'shopping_item', 'credits'].includes(activity.type.toLowerCase())
+                    ['budget', 'credits'].includes(activity.type.toLowerCase())
                 );
 
                 if (validActivities.length < activities.length) {
-                    console.warn(`Filtered out ${activities.length - validActivities.length} invalid or non-personal finance activities`, {
+                    console.warn(`Filtered out ${activities.length - validActivities.length} invalid or non-budget/credits activities`, {
                         invalid: activities.filter(a => !(
                             a && 
                             typeof a === 'object' &&
@@ -263,13 +222,13 @@ function toggleRecentActivities() {
                             a.icon &&
                             a.type &&
                             a.timestamp &&
-                            ['budget', 'bill', 'shopping_list', 'shopping_item', 'credits'].includes(a.type.toLowerCase())
+                            ['budget', 'credits'].includes(a.type.toLowerCase())
                         ))
                     });
                 }
 
                 fullList.innerHTML = validActivities.length > 0 ? validActivities.map(activity => {
-                    const colorType = activity.type.toLowerCase().startsWith('shopping_') ? 'shopping' : activity.type.toLowerCase();
+                    const colorType = activity.type.toLowerCase();
                     return `
                     <div class="personal-recent-activity-item">
                         <div class="personal-activity-icon-wrapper">
@@ -331,42 +290,6 @@ function loadFinancialSummary() {
             console.error('Error loading budget summary:', error);
         });
 
-    fetch(window.apiUrls.billSummary)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                console.error('Bill summary error:', data.error);
-                return;
-            }
-            const upcomingBills = document.getElementById('upcomingBills');
-            if (upcomingBills) {
-                upcomingBills.querySelector('.personal-amount-value').dataset.amount = data.pending_amount;
-                upcomingBills.querySelector('.personal-amount-value').textContent = amountsVisible ? formatCurrency(data.pending_amount) : '****';
-                upcomingBills.querySelector('.personal-status-indicator').textContent = data.overdue_amount > 0 ? window.t('overdue', { default: 'Ya Wuce Lokaci' }) : window.t('on_time', { default: 'A Kan Lokaci' });
-            }
-        })
-        .catch(error => {
-            console.error('Error loading bill summary:', error);
-        });
-
-    fetch(window.apiUrls.shoppingSummary)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                console.error('Shopping summary error:', data.error);
-                return;
-            }
-            const shoppingSpending = document.getElementById('shoppingSpending');
-            if (shoppingSpending) {
-                shoppingSpending.querySelector('.personal-amount-value').dataset.amount = data.total_shopping_spent;
-                shoppingSpending.querySelector('.personal-amount-value').textContent = amountsVisible ? formatCurrency(data.total_shopping_spent) : '****';
-                shoppingSpending.querySelector('.personal-status-indicator').textContent = data.total_shopping_spent <= data.total_shopping_budget ? window.t('within_budget', { default: 'Cikin Kasafin Kuɗi' }) : window.t('over_budget', { default: 'Fiye da Kasafin Kuɗi' });
-            }
-        })
-        .catch(error => {
-            console.error('Error loading shopping summary:', error);
-        });
-
     fetch(window.apiUrls.ficoreBalance)
         .then(response => response.json())
         .then(data => {
@@ -418,11 +341,11 @@ function loadRecentActivity() {
                 activity.icon &&
                 activity.type &&
                 activity.timestamp &&
-                ['budget', 'bill', 'shopping_list', 'shopping_item', 'credits'].includes(activity.type.toLowerCase())
+                ['budget', 'credits'].includes(activity.type.toLowerCase())
             );
 
             if (validActivities.length < activities.length) {
-                console.warn(`Filtered out ${activities.length - validActivities.length} invalid or non-personal finance activities`, {
+                console.warn(`Filtered out ${activities.length - validActivities.length} invalid or non-budget/credits activities`, {
                     invalid: activities.filter(a => !(
                         a && 
                         typeof a === 'object' &&
@@ -430,13 +353,13 @@ function loadRecentActivity() {
                         a.icon &&
                         a.type &&
                         a.timestamp &&
-                        ['budget', 'bill', 'shopping_list', 'shopping_item', 'credits'].includes(a.type.toLowerCase())
+                        ['budget', 'credits'].includes(a.type.toLowerCase())
                     ))
                 });
             }
 
             const renderActivity = (activity) => {
-                const colorType = activity.type.toLowerCase().startsWith('shopping_') ? 'shopping' : activity.type.toLowerCase();
+                const colorType = activity.type.toLowerCase();
                 return `
                 <div class="personal-recent-activity-item">
                     <div class="personal-activity-icon-wrapper">
