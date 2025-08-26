@@ -1,12 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, session, request
 from flask_login import login_required, current_user
-from ..translations import trans
 from jinja2.exceptions import TemplateNotFound
 from datetime import datetime
-from ..models import create_feedback
+from models import create_feedback
 from flask import current_app
-from ..utils import get_mongo_db, logger, get_user_query
-from ..users.routes import get_post_login_redirect
+from utils import get_mongo_db, logger, get_user_query
+from users import get_post_login_redirect
 
 general_bp = Blueprint('general_bp', __name__, url_prefix='/general')
 
@@ -137,4 +136,5 @@ def feedback():
         title=trans('general_feedback', lang=lang, default='Feedback'),
         background_color='#FFF8F0',  # Soft Cream background
         button_color='#1E3A8A'  # Deep Blue for buttons
+
     )
