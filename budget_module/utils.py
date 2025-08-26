@@ -9,7 +9,6 @@ from flask import session, has_request_context, current_app, request, url_for, r
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 from werkzeug.routing import BuildError
-from .translations import trans
 import time
 from wtforms import ValidationError
 from flask_login import LoginManager
@@ -843,4 +842,5 @@ __all__ = [
     'PERSONAL_TOOLS', 'PERSONAL_NAV', 'PERSONAL_EXPLORE_FEATURES',
     'ADMIN_TOOLS', 'ADMIN_NAV', 'ADMIN_EXPLORE_FEATURES', 'ALL_TOOLS', 'get_explore_features',
     'get_budgets', 'check_ficore_credit_balance'
+
 ]
