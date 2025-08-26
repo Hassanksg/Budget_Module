@@ -3,8 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import FloatField, IntegerField, SubmitField, StringField, FieldList, FormField
 from wtforms.validators import DataRequired, NumberRange, ValidationError, Optional, Length
 from flask_login import current_user, login_required
-from ..utils import get_mongo_db, logger, check_ficore_credit_balance, format_date, cache
-from ..translations import trans
+from utils import get_mongo_db, logger, check_ficore_credit_balance, format_date, cache
 from datetime import datetime
 from bson import ObjectId
 from ..models import log_tool_usage, create_budget
@@ -14,7 +13,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
 from io import BytesIO
-from ..reports import draw_ficore_pdf_header
+from reports import draw_ficore_pdf_header
 
 budget_bp = Blueprint(
     'budget',
@@ -827,4 +826,5 @@ def generate_tips_and_insights(latest_budget):
                 insights.append(trans("budget_insight_high_housing", default='Housing costs exceed 40% of income. Consider cost-saving measures.'))
     except (ValueError, TypeError) as e:
         logger.warning(f"Error generating insights: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
+
     return tips, insights
