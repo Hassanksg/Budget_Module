@@ -19,13 +19,18 @@ GENERAL_TRANSLATIONS = {
         'general_finance_tips': 'Personal Finance Tips',
         'general_privacy': 'Privacy Policy',
         'general_terms': 'Terms of Service',
+        'general_help': 'Help',
+        'general_help_tooltip': 'Get help',
         'lang_en': 'English',
         'lang_ha': 'Hausa',
         'lang_change_success': 'Language changed successfully',
         'lang_invalid': 'Invalid language',
         'not_found': 'Page not found',
         'csrf_error': 'CSRF token error',
-        'bill_submit': 'Submit Bill'  # Included from GENERAL_SPECIFIC_KEYS
+        'bill_submit': 'Submit Bill',
+        'general_app_description': 'Manage your finances with Ficore',
+        'general_ficore_africa': 'Ficore Africa',
+        'general_ficore_africa_logo': 'Ficore Africa Logo'
     },
     'ha': {
         'general_welcome': 'Barka da zuwa',
@@ -46,12 +51,17 @@ GENERAL_TRANSLATIONS = {
         'general_finance_tips': 'Shawari kan Kuɗin Kai',
         'general_privacy': 'Manufar Sirri',
         'general_terms': 'Sharuɗɗan Sabis',
+        'general_help': 'Taimako',
+        'general_help_tooltip': 'Samun taimako',
         'lang_en': 'Turanci',
         'lang_ha': 'Hausa',
         'lang_change_success': 'An canza harshe cikin nasara',
         'lang_invalid': 'Harshe mara inganci',
         'not_found': 'Ba a sami shafi ba',
         'csrf_error': 'Kuskuren alamar CSRF',
-        'bill_submit': 'Mika Lissafin Kuɗi'
+        'bill_submit': 'Mika Lissafin Kuɗi',
+        'general_app_description': 'Sarrafa kuɗin ku tare da Ficore',
+        'general_ficore_africa': 'Ficore Afrika',
+        'general_ficore_africa_logo': 'Alamar Ficore Afrika'
     }
 }
