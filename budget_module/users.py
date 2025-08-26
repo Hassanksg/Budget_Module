@@ -9,7 +9,7 @@ from flask_login import login_required, current_user, login_user, logout_user
 from pymongo import errors
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
-from utils import get_mongo_db, logger, trans, is_valid_email
+from utils import get_mongo_db, logger, is_valid_email
 from models import create_user
 from translations import trans
 
@@ -443,4 +443,5 @@ def logout():
         response.set_cookie('remember_token', '', expires=0, httponly=True, secure=True)
 
         return response
+
 
