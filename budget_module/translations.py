@@ -1,3 +1,4 @@
+# translations.py
 import logging
 from flask import session, has_request_context, g, request
 from typing import Dict, Optional, Union
@@ -33,6 +34,7 @@ lock = threading.Lock()
 try:
     # Personal Finance Tools
     from budget_translations import BUDGET_TRANSLATIONS
+    from general_translations import GENERAL_TRANSLATIONS
 except ImportError as e:
     logger.error(f"Failed to import translation module: {str(e)}", exc_info=True)
     raise
@@ -40,11 +42,18 @@ except ImportError as e:
 # Map module names to translation dictionaries
 translation_modules = {
     'budget': BUDGET_TRANSLATIONS,
+    'general': GENERAL_TRANSLATIONS
 }
 
 # Map key prefixes to module names
 KEY_PREFIX_TO_MODULE = {
     'budget_': 'budget',
+    'general_': 'general',
+    'lang_': 'general',
+    'access_': 'general',
+    'not_found': 'general',
+    'csrf_': 'general',
+    'bill_': 'general'
 }
 
 # Log loaded translations
@@ -71,13 +80,6 @@ def trans(key: str, lang: Optional[str] = None, default: Optional[str] = None, *
     Returns:
         The translated string, falling back to English, default, or the key itself if missing.
         Applies string formatting with kwargs if provided, with fallback for missing keys.
-    
-    Notes:
-        - Uses session['lang'] if lang is None and request context exists.
-        - Logs warnings for missing translations only once per key.
-        - Logs errors for formatting failures but returns unformatted string as fallback.
-        - Uses g.logger if available, else the default logger.
-        - Checks general translations for common UI elements without prefixes.
     """
     current_logger = g.get('logger', logger) if has_request_context() else logger
     session_id = session.get('sid', 'no-session-id') if has_request_context() else 'no-session-id'
@@ -116,7 +118,7 @@ def trans(key: str, lang: Optional[str] = None, default: Optional[str] = None, *
     if key in GENERAL_SPECIFIC_KEYS:
         module_name = 'general'
 
-    module = translation_modules.get(module_name, translation_modules['budget'])
+    module = translation_modules.get(module_name, translation_modules['general'])
     lang_dict = module.get(lang, {})
 
     # Get translation
@@ -141,7 +143,7 @@ def trans(key: str, lang: Optional[str] = None, default: Optional[str] = None, *
             return translation.format(**kwargs)
         except KeyError as e:
             with lock:
-                error_key = f"formatting_error_{key}{lang}"
+                error_key = f"formatting_error_{key}_{lang}"
                 if error_key not in logged_missing_keys:
                     logged_missing_keys.add(error_key)
                     current_logger.error(
@@ -151,7 +153,7 @@ def trans(key: str, lang: Optional[str] = None, default: Optional[str] = None, *
             return translation  # Return unformatted string as fallback
         except ValueError as e:
             with lock:
-                error_key = f"formatting_error{key}_{lang}"
+                error_key = f"formatting_error_{key}_{lang}"
                 if error_key not in logged_missing_keys:
                     logged_missing_keys.add(error_key)
                     current_logger.error(
@@ -195,7 +197,7 @@ def get_module_translations(module_name: str, lang: Optional[str] = None) -> Dic
     Get translations for a specific module and language.
     
     Args:
-        module_name: Name of the translation module (e.g., 'general', 'bill').
+        module_name: Name of the translation module (e.g., 'general', 'budget').
         lang: Language code ('en', 'ha'). Defaults to session['lang'] or 'en'.
     
     Returns:
@@ -224,5 +226,3 @@ def register_translation(app):
         if has_request_context() and 'lang' not in session:
             # Default to 'en' or use request headers/user settings as needed
             session['lang'] = request.accept_languages.best_match(['en', 'ha'], 'en')
-
-all = ['trans', 'get_translations', 'get_all_translations', 'get_module_translations', 'register_translation']
