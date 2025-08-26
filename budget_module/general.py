@@ -6,6 +6,7 @@ from models import create_feedback
 from flask import current_app
 from utils import get_mongo_db, logger, get_user_query
 from users import get_post_login_redirect
+from translations import trans
 
 general_bp = Blueprint('general_bp', __name__, url_prefix='/general')
 
@@ -138,3 +139,4 @@ def feedback():
         button_color='#1E3A8A'  # Deep Blue for buttons
 
     )
+
