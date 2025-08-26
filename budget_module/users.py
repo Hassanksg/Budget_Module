@@ -11,6 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import re
 from utils import get_mongo_db, logger, trans, is_valid_email
 from models import create_user
+from translations import trans
 
 users_bp = Blueprint('users', __name__, template_folder='templates/users')
 
@@ -442,3 +443,4 @@ def logout():
         response.set_cookie('remember_token', '', expires=0, httponly=True, secure=True)
 
         return response
+
