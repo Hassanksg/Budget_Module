@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 from utils import get_mongo_db, logger, check_ficore_credit_balance, format_date, cache
 from datetime import datetime
 from bson import ObjectId
-from models import log_tool_usage, create_budget
+from models import create_budget
 import uuid
 import bleach
 from reportlab.pdfgen import canvas
@@ -298,12 +298,6 @@ def new():
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json
 
     try:
-        log_tool_usage(db=db, user_id=current_user.id, session_id=session_id, action='create_budget_view')
-    except Exception as e:
-        logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session_id})
-        flash(trans('budget_log_error', default='Error logging budget activity.'), 'danger')
-
-    try:
         activities = db.activities.find({'user_id': current_user.id, 'tool_name': 'budget'}).sort('timestamp', -1).limit(10)
         activities = [{
             'action': a['action'],
@@ -418,12 +412,6 @@ def dashboard():
     db = get_mongo_db()
 
     try:
-        log_tool_usage(db=db, user_id=current_user.id, session_id=session_id, action='dashboard_view')
-    except Exception as e:
-        logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session_id})
-        flash(trans('budget_log_error', default='Error logging budget activity.'), 'danger')
-
-    try:
         activities = db.activities.find({'user_id': current_user.id, 'tool_name': 'budget'}).sort('timestamp', -1).limit(10)
         activities = [{
             'action': a['action'],
@@ -471,12 +459,6 @@ def manage():
     session_id = session.get('sid', str(uuid.uuid4()))
     session['sid'] = session_id
     db = get_mongo_db()
-
-    try:
-        log_tool_usage(db=db, user_id=current_user.id, session_id=session_id, action='manage_view')
-    except Exception as e:
-        logger.error(f"Failed to log tool usage: {str(e)}", extra={'session_id': session_id})
-        flash(trans('budget_log_error', default='Error logging budget activity.'), 'danger')
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -533,7 +515,6 @@ def summary():
     db = get_mongo_db()
     session_id = session.get('sid', str(uuid.uuid4()))
     try:
-        log_tool_usage(db=db, user_id=current_user.id, session_id=session_id, action='summary_view')
         latest_budget = db.budgets.find_one({'user_id': current_user.id}, sort=[('created_at', -1)])
         if not latest_budget:
             return jsonify({
@@ -719,7 +700,6 @@ def delete_budget():
                     return jsonify({'success': False, 'error': trans('budget_delete_failed', default='Failed to delete budget.')}), 500
 
         cache.delete_memoized(get_budgets)
-        log_tool_usage(db=db, user_id=current_user.id, session_id=session_id, action='delete_budget')
         return jsonify({'success': True, 'message': trans('budget_deleted', default='Budget deleted successfully!')})
     except Exception as e:
         logger.error(f"Error deleting budget: {str(e)}", extra={'session_id': session_id})
@@ -829,5 +809,3 @@ def generate_tips_and_insights(latest_budget):
         logger.warning(f"Error generating insights: {str(e)}", extra={'session_id': session.get('sid', 'unknown')})
 
     return tips, insights
-
-
