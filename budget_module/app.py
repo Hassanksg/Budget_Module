@@ -335,7 +335,7 @@ def create_app():
     def index():
         if current_user.is_authenticated:
             if current_user.role == 'admin':
-                return redirect(url_for('dashboard.index'))
+                return redirect(url_for('admin.index'))
             return redirect(url_for('general_bp.home'))
         return redirect(url_for('general_bp.landing'))
 
@@ -363,7 +363,7 @@ def create_app():
                     {'_id': current_user.id},
                     {'$set': {'language': lang}}
                 )
-        return redirect(request.referrer or url_for('home'))
+        return redirect(request.referrer or url_for('index'))
 
     @app.route('/health')
     def health():
