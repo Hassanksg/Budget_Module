@@ -517,3 +517,18 @@ def to_dict_credit_request(doc):
         'updated_at': doc.get('updated_at', None),
         'admin_id': doc.get('admin_id', None)
     }
+def create_feedback(db, feedback_data):
+    """
+    Insert a feedback document into the feedback collection.
+    Args:
+        db: MongoDB database instance
+        feedback_data: dict containing feedback info
+    Returns:
+        str: Inserted feedback ID
+    """
+    try:
+        result = db.feedback.insert_one(feedback_data)
+        return str(result.inserted_id)
+    except Exception as e:
+        logger.error(f"Error creating feedback: {str(e)}", exc_info=True, extra={'session_id': feedback_data.get('session_id', 'no-session-id')})
+        raise
