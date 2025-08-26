@@ -11,9 +11,8 @@
                     <label for="tool_name" class="form-label">{{ t('general_select_tool', default='Select Tool') }} <span class="text-danger">*</span></label>
                     <select name="tool_name" id="tool_name" class="form-select" required>
                         <option value="" disabled selected>{{ t('general_choose_option', default='Choose...') }}</option>
-                        <option value="budget">{{ t('budget_budget_planner', default='Budget') }}</option>
-                        <option value="bill">{{ t('bill_bill_planner', default='Bills') }}</option>
-                        <option value="shopping">{{ t('shopping_list', default='Shopping') }}</option>
+                        <option value="budget">{{ t('budget_budget_planner', default='Budget Planner') }}</option>
+                        <option value="report">{{ t('reports_dashboard', default='Budget Reports') }}</option>
                     </select>
                     <div class="invalid-feedback">{{ t('general_invalid_tool', default='Please select a valid tool') }}</div>
                 </div>
