@@ -2,7 +2,7 @@ from datetime import datetime
 from pymongo import ASCENDING, DESCENDING
 from bson import ObjectId
 from pymongo.errors import DuplicateKeyError, OperationFailure, PyMongoError, WriteError
-from utils import get_mongo_db, logger, trans
+from utils import get_mongo_db, logger
 from werkzeug.security import generate_password_hash
 import uuid
 
@@ -441,3 +441,4 @@ def to_dict_ficore_credit_transaction(transaction):
         'budget_id': transaction.get('budget_id', None)
 
     }
+
