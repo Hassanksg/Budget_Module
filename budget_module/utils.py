@@ -16,6 +16,7 @@ from flask_session import Session
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from translations import trans  
 
 # Initialize extensions
 login_manager = LoginManager()
@@ -844,3 +845,4 @@ __all__ = [
     'get_budgets', 'check_ficore_credit_balance'
 
 ]
+
