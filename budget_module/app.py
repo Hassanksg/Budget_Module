@@ -34,6 +34,17 @@ from admin import admin_bp
 from settings import settings_bp
 from translations import trans
 
+# Define role-based constants (placeholders; update with actual values if defined elsewhere)
+PERSONAL_TOOLS = []
+ADMIN_TOOLS = []
+PERSONAL_EXPLORE_FEATURES = []
+ADMIN_EXPLORE_FEATURES = []
+PERSONAL_NAV = []
+ADMIN_NAV = []
+
+def get_explore_features():
+    return []
+
 # Load environment variables
 load_dotenv()
 
@@ -221,6 +232,27 @@ def create_app():
 
     # Template filters and context processors
 
+    # Define functions before using them in globals
+    def format_currency(value):
+        try:
+            return f'₦{float(value):,.2f}'
+        except (ValueError, TypeError):
+            return str(value)
+
+    def format_date(value):
+        format_str = '%B %d, %Y' if session.get('lang', 'en') == 'en' else '%d %B %Y'
+        try:
+            if isinstance(value, datetime):
+                return value.strftime(format_str)
+            elif isinstance(value, str):
+                return datetime.strptime(value, '%Y-%m-%d').strftime(format_str)
+            return str(value)
+        except Exception:
+            return str(value)
+
+    def is_admin():
+        return current_user.is_authenticated and current_user.role == 'admin'
+
     # Add 't' as an alias for 'trans' for backwards compatibility in templates
     app.jinja_env.globals.update(
         trans=trans_function,
@@ -253,11 +285,11 @@ def create_app():
             return str(value)
 
     @app.template_filter('format_date')
-    def format_date(value):
+    def format_date_filter(value):
         return format_date(value)
 
     @app.template_filter('format_currency')
-    def format_currency(value):
+    def format_currency_filter(value):
         return format_currency(value)
 
     @app.context_processor
@@ -366,4 +398,3 @@ if __name__ == '__main__':
     logger.info('Starting Flask application')
 
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
-
