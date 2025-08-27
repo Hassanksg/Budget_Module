@@ -56,10 +56,10 @@ def initialize_app_data(app):
                     'validator': {
                         '$jsonSchema': {
                             'bsonType': 'object',
-                            'required': ['_id', 'user_id', 'ficore_credit_balance', 'created_at'],
+                            'required': ['_id', 'ficore_credit_balance', 'created_at'],
                             'properties': {
                                 '_id': {'bsonType': 'string'},
-                                'user_id': {'bsonType': 'string'},
+                                'user_id': {'bsonType': ['string', 'null']},
                                 'email': {'bsonType': ['string', 'null']},
                                 'password_hash': {'bsonType': ['string', 'null']},
                                 'ficore_credit_balance': {'bsonType': ['double', 'int'], 'minimum': 0},
@@ -70,12 +70,15 @@ def initialize_app_data(app):
                                 'personal_details': {'bsonType': ['object', 'null']},
                                 'settings': {'bsonType': ['object', 'null']},
                                 'security_settings': {'bsonType': ['object', 'null']},
-                                'profile_picture': {'bsonType': ['string', 'null']}
+                                'profile_picture': {'bsonType': ['string', 'null']},
+                                'display_name': {'bsonType': ['string', 'null']},
+                                'is_admin': {'bsonType': 'bool'},
+                                'username': {'bsonType': ['string', 'null']}
                             }
                         }
                     },
                     'indexes': [
-                        {'key': [('user_id', ASCENDING)], 'unique': True},
+                        {'key': [('user_id', ASCENDING)], 'unique': True, 'partialFilterExpression': {'user_id': {'$exists': True}}},
                         {'key': [('email', ASCENDING)], 'unique': True, 'partialFilterExpression': {'email': {'$exists': True}}}
                     ]
                 },
@@ -247,6 +250,22 @@ class User(UserMixin):
         self.settings = user_doc.get('settings', {})
         self.security_settings = user_doc.get('security_settings', {})
         self.profile_picture = user_doc.get('profile_picture', None)
+        self.display_name = user_doc.get('display_name', '')
+
+    @property
+    def is_active(self):
+        db = get_db()
+        user = db.users.find_one({'_id': self.id})
+        return user.get('is_active', True) if user else False
+
+    def get_id(self):
+        return str(self.id)
+    
+    def get_first_name(self):
+        """Get the first name from display_name or email"""
+        if self.display_name and self.display_name != self.id:
+            return self.display_name.split()[0] if ' ' in self.display_name else self.display_name
+        return self.email.split('@')[0] if '@' in self.email else self.id
 
 def get_budgets(db, filter_kwargs):
     """Retrieve budget records based on filter criteria.
@@ -397,7 +416,7 @@ def create_user(db, user_data):
         str: ID of the created user
     """
     try:
-        if 'user_id' not in user_data or user_data['user_id'] is None:
+        if user_data.get('role') != 'admin' and ('user_id' not in user_data or user_data['user_id'] is None):
             user_data['user_id'] = str(uuid.uuid4())
         if 'password' in user_data:
             user_data['password_hash'] = generate_password_hash(user_data.pop('password'))
