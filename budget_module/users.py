@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, session, make_response
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, SelectField, SubmitField, BooleanField, validators
+from wtforms import StringField, PasswordField, TextAreaField, SelectField, SubmitField, BooleanField, validators, IntegerField, SelectMultipleField
 from flask_login import login_required, current_user, login_user, logout_user
 from pymongo.errors import PyMongoError, WriteError, DuplicateKeyError
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -91,26 +91,65 @@ class PersonalSetupForm(FlaskForm):
     first_name = StringField(
         trans('general_first_name', default='First Name'),
         validators=[
-            validators.DataRequired(message=trans('general_first_name_required', default='First name is required')),
-            validators.Length(min=1, max=255, message=trans('general_first_name_length', default='First name must be between 1 and 255 characters'))
+            validators.Optional(),
+            validators.Length(max=255, message=trans('general_first_name_length', default='First name must be between 1 and 255 characters'))
         ],
         render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
     )
     last_name = StringField(
         trans('general_last_name', default='Last Name'),
         validators=[
-            validators.DataRequired(message=trans('general_last_name_required', default='Last name is required')),
-            validators.Length(min=1, max=255, message=trans('general_last_name_length', default='Last name must be between 1 and 255 characters'))
+            validators.Optional(),
+            validators.Length(max=255, message=trans('general_last_name_length', default='Last name must be between 1 and 255 characters'))
         ],
         render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
     )
-    phone_number = StringField(
-        trans('general_phone_number', default='Phone Number'),
-        validators=[
-            validators.DataRequired(message=trans('general_phone_number_required', default='Phone number is required')),
-            validators.Regexp(PHONE_REGEX, message=trans('general_phone_number_format', default='Phone number must be 10-15 digits'))
+    financial_goals = SelectMultipleField(
+        trans('setup_financial_goals', default='What are your main financial goals? (Select all that apply)'),
+        choices=[
+            ('emergency_fund', trans('setup_emergency_fund', default='Build an emergency fund')),
+            ('debt_payoff', trans('setup_debt_payoff', default='Pay off debt')),
+            ('savings_vacation', trans('setup_savings_vacation', default='Save for vacation/travel')),
+            ('retirement', trans('setup_retirement', default='Plan for retirement')),
+            ('home_purchase', trans('setup_home_purchase', default='Save for a home')),
+            ('other', trans('setup_other', default='Other (e.g., education, investments)'))
         ],
-        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
+        validators=[validators.Optional()],
+        render_kw={'class': 'form-select', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;', 'multiple': True}
+    )
+    currency = SelectField(
+        trans('setup_currency', default='Preferred Currency'),
+        choices=[
+            ('USD', 'USD - US Dollar'),
+            ('EUR', 'EUR - Euro'),
+            ('GBP', 'GBP - British Pound'),
+            ('NGN', 'NGN - Nigerian Naira'),
+            ('other', trans('setup_other_currency', default='Other'))
+        ],
+        validators=[validators.DataRequired()],
+        default='USD',
+        render_kw={'class': 'form-select', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}
+    )
+    budget_frequency = SelectField(
+        trans('setup_budget_frequency', default='How often do you want to set budgets?'),
+        choices=[
+            ('monthly', trans('setup_monthly', default='Monthly')),
+            ('weekly', trans('setup_weekly', default='Weekly')),
+            ('biweekly', trans('setup_biweekly', default='Bi-weekly'))
+        ],
+        validators=[validators.DataRequired()],
+        render_kw={'class': 'form-select', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}
+    )
+    notifications = SelectMultipleField(
+        trans('setup_notifications', default='What notifications would you like? (Select all that apply)'),
+        choices=[
+            ('spending_alerts', trans('setup_spending_alerts', default='Spending limit alerts')),
+            ('bill_reminders', trans('setup_bill_reminders', default='Bill due reminders')),
+            ('goal_progress', trans('setup_goal_progress', default='Goal progress updates')),
+            ('insights_tips', trans('setup_insights_tips', default='Personalized tips and insights'))
+        ],
+        validators=[validators.Optional()],
+        render_kw={'class': 'form-select', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;', 'multiple': True}
     )
     language = SelectField(
         trans('general_language', default='Language'),
@@ -360,28 +399,25 @@ def personal_setup_wizard():
 
         form = PersonalSetupForm()
         if form.validate_on_submit():
-            first_name = form.first_name.data.strip()
-            last_name = form.last_name.data.strip()
-            phone_number = form.phone_number.data.strip()
+            first_name = form.first_name.data.strip() if form.first_name.data else None
+            last_name = form.last_name.data.strip() if form.last_name.data else None
+            financial_goals = list(form.financial_goals.data) if form.financial_goals.data else []
+            currency = form.currency.data
+            budget_frequency = form.budget_frequency.data
+            notifications = list(form.notifications.data) if form.notifications.data else []
             language = form.language.data
 
-            # Additional validation
-            if not first_name or len(first_name) > 255:
+            # Additional validation for optional fields
+            if first_name and len(first_name) > 255:
                 flash(trans('general_first_name_length', default='First name must be between 1 and 255 characters'), 'danger')
                 logger.warning(f"Invalid first name length for user: {user_id}")
                 log_audit_action('personal_setup_failed', {'user_id': user_id, 'reason': 'invalid_first_name_length'})
                 return render_template('users/personal_setup.html', form=form, title=trans('general_personal_setup', lang=session.get('lang', 'en')), background_color='#FFF8F0')
 
-            if not last_name or len(last_name) > 255:
+            if last_name and len(last_name) > 255:
                 flash(trans('general_last_name_length', default='Last name must be between 1 and 255 characters'), 'danger')
                 logger.warning(f"Invalid last name length for user: {user_id}")
                 log_audit_action('personal_setup_failed', {'user_id': user_id, 'reason': 'invalid_last_name_length'})
-                return render_template('users/personal_setup.html', form=form, title=trans('general_personal_setup', lang=session.get('lang', 'en')), background_color='#FFF8F0')
-
-            if not PHONE_REGEX.match(phone_number):
-                flash(trans('general_phone_number_format', default='Phone number must be 10-15 digits'), 'danger')
-                logger.warning(f"Invalid phone number format for user: {user_id}")
-                log_audit_action('personal_setup_failed', {'user_id': user_id, 'reason': 'invalid_phone_number_format'})
                 return render_template('users/personal_setup.html', form=form, title=trans('general_personal_setup', lang=session.get('lang', 'en')), background_color='#FFF8F0')
 
             if language not in ['en', 'ha']:
@@ -390,19 +426,24 @@ def personal_setup_wizard():
                 log_audit_action('personal_setup_failed', {'user_id': user_id, 'reason': 'invalid_language'})
                 return render_template('users/personal_setup.html', form=form, title=trans('general_personal_setup', lang=session.get('lang', 'en')), background_color='#FFF8F0')
 
+            update_data = {
+                'language': language,
+                'setup_complete': True
+            }
+            if first_name or last_name:
+                update_data['personal_details'] = {}
+                if first_name:
+                    update_data['personal_details']['first_name'] = first_name
+                if last_name:
+                    update_data['personal_details']['last_name'] = last_name
+            update_data['financial_goals'] = financial_goals
+            update_data['currency'] = currency
+            update_data['budget_frequency'] = budget_frequency
+            update_data['notifications'] = notifications
+
             db.users.update_one(
                 {'_id': user_id},
-                {
-                    '$set': {
-                        'personal_details': {
-                            'first_name': first_name,
-                            'last_name': last_name,
-                            'phone_number': phone_number
-                        },
-                        'language': language,
-                        'setup_complete': True
-                    }
-                }
+                {'$set': update_data}
             )
             log_audit_action('complete_personal_setup_wizard', {'user_id': user_id, 'updated_by': current_user.id})
             logger.info(f"Personal setup completed for user: {user_id}, session_id: {session.get('session_id')}")
@@ -465,4 +506,3 @@ def logout():
         response.set_cookie(current_app.config['SESSION_COOKIE_NAME'], '', expires=0, httponly=True, secure=current_app.config.get('SESSION_COOKIE_SECURE', True))
         response.set_cookie('remember_token', '', expires=0, httponly=True, secure=True)
         return response
-
