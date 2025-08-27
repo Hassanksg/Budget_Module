@@ -384,7 +384,7 @@ def create_app():
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template(
-            'errors/404.html',
+            'general/error.html',
             error=str(e),
             title=trans_function('not_found', lang=session.get('lang', 'en'))
         ), 404
@@ -398,3 +398,4 @@ if __name__ == '__main__':
     logger.info('Starting Flask application')
     port = int(os.environ.get('PORT', 1000))  # Use 1000 as fallback for consistency
     app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
+
