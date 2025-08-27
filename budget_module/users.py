@@ -12,7 +12,6 @@ import re
 from utils import get_mongo_db, logger, is_valid_email
 from models import create_user
 from translations import trans
-from app import User  # Changed from relative import to absolute import
 
 users_bp = Blueprint('users', __name__, template_folder='templates/users')
 
@@ -204,6 +203,7 @@ def login():
                     return render_template('users/login.html', form=form, title=trans('general_login', lang=session.get('lang', 'en')), background_color='#FFF8F0'), 401
 
                 logger.info(f"User found: {username}, proceeding with login")
+                from budget_module.app import User
                 user_obj = User(user['_id'], user['email'], user.get('display_name'), user.get('role', 'personal'))
                 login_result = login_user(user_obj, remember=form.remember.data)
                 if not login_result:
@@ -307,6 +307,7 @@ def signup():
             log_audit_action('signup', {'user_id': username, 'email': email, 'role': 'personal'})
             logger.info(f"New user created: {username}, email: {email}, role: personal")
 
+            from budget_module.app import User
             user_obj = User(username, email, username, 'personal')
             login_user(user_obj, remember=True)
             session['lang'] = 'en'
