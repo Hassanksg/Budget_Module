@@ -27,6 +27,7 @@ from general import general_bp
 from users import users_bp
 from admin import admin_bp
 from settings import settings_bp
+from activities import activities_bp
 from translations import trans
 # Define role-based constants
 PERSONAL_TOOLS = []
@@ -125,6 +126,7 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(budget_bp, url_prefix='/budget')
     app.register_blueprint(general_bp, url_prefix='/general')
+    app.register_blueprint(activities_bp)
    
     # Initialize data
     with app.app_context():
@@ -315,3 +317,4 @@ if __name__ == '__main__':
     logger.info('Starting Flask application')
     port = int(os.environ.get('PORT', 1000)) # Use 1000 as fallback for consistency
     app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
+
