@@ -34,7 +34,7 @@ class LoginForm(FlaskForm):
             validators.Length(min=3, max=50, message=trans('general_identifier_length', default='Identifier must be between 3 and 50 characters')),
             validate_identifier
         ],
-        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
+        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}
     )
     password = PasswordField(
         trans('general_password', default='Password'),
@@ -42,7 +42,7 @@ class LoginForm(FlaskForm):
             validators.DataRequired(message=trans('general_password_required', default='Password is required')),
             validators.Length(min=6, message=trans('general_password_length', default='Password must be at least 6 characters'))
         ],
-        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
+        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}
     )
     remember = BooleanField(
         trans('general_remember_me', default='Remember me'),
@@ -50,7 +50,7 @@ class LoginForm(FlaskForm):
     )
     submit = SubmitField(
         trans('general_login', default='Sign In'),
-        render_kw={'class': 'btn w-100', 'style': 'background-color: #1E3A8A; color: #FFF8F0;'}  # Deep Blue button, Soft Cream text
+        render_kw={'class': 'btn w-100', 'style': 'background-color: #1E3A8A; color: #FFF8F0;'}
     )
 
 class SignupForm(FlaskForm):
@@ -61,7 +61,7 @@ class SignupForm(FlaskForm):
             validators.Length(min=3, max=50, message=trans('general_username_length', default='Username must be between 3 and 50 characters')),
             validators.Regexp(USERNAME_REGEX, message=trans('general_username_format', default='Username must be alphanumeric with underscores'))
         ],
-        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
+        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}
     )
     email = StringField(
         trans('general_email', default='Email'),
@@ -71,7 +71,7 @@ class SignupForm(FlaskForm):
             validators.Length(max=254),
             lambda form, field: is_valid_email(field.data.strip().lower()) or validators.ValidationError(trans('general_email_domain_invalid', default='Invalid email domain'))
         ],
-        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
+        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}
     )
     password = PasswordField(
         trans('general_password', default='Password'),
@@ -80,11 +80,11 @@ class SignupForm(FlaskForm):
             validators.Length(min=6, message=trans('general_password_length', default='Password must be at least 6 characters')),
             validators.Regexp(PASSWORD_REGEX, message=trans('general_password_format', default='Password must be at least 6 characters'))
         ],
-        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
+        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}
     )
     submit = SubmitField(
         trans('general_signup', default='Sign Up'),
-        render_kw={'class': 'btn w-100', 'style': 'background-color: #1E3A8A; color: #FFF8F0;'}  # Deep Blue button, Soft Cream text
+        render_kw={'class': 'btn w-100', 'style': 'background-color: #1E3A8A; color: #FFF8F0;'}
     )
 
 class PersonalSetupForm(FlaskForm):
@@ -94,7 +94,7 @@ class PersonalSetupForm(FlaskForm):
             validators.Optional(),
             validators.Length(max=255, message=trans('general_first_name_length', default='First name must be between 1 and 255 characters'))
         ],
-        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
+        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}
     )
     last_name = StringField(
         trans('general_last_name', default='Last Name'),
@@ -102,7 +102,7 @@ class PersonalSetupForm(FlaskForm):
             validators.Optional(),
             validators.Length(max=255, message=trans('general_last_name_length', default='Last name must be between 1 and 255 characters'))
         ],
-        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
+        render_kw={'class': 'form-control', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}
     )
     financial_goals = SelectMultipleField(
         trans('setup_financial_goals', default='What are your main financial goals? (Select all that apply)'),
@@ -158,7 +158,7 @@ class PersonalSetupForm(FlaskForm):
             ('ha', trans('general_hausa', default='Hausa'))
         ],
         validators=[validators.DataRequired(message=trans('general_language_required', default='Language is required'))],
-        render_kw={'class': 'form-select', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}  # Soft Cream background, Deep Blue border
+        render_kw={'class': 'form-select', 'style': 'background-color: #FFF8F0; border-color: #1E3A8A;'}
     )
     terms = BooleanField(
         trans('general_terms', default='I accept the Terms and Conditions'),
@@ -167,14 +167,14 @@ class PersonalSetupForm(FlaskForm):
     )
     submit = SubmitField(
         trans('general_save_and_continue', default='Save and Continue'),
-        render_kw={'class': 'btn w-100', 'style': 'background-color: #1E3A8A; color: #FFF8F0;'}  # Deep Blue button, Soft Cream text
+        render_kw={'class': 'btn w-100', 'style': 'background-color: #1E3A8A; color: #FFF8F0;'}
     )
 
 def log_audit_action(action, details=None):
     try:
         db = get_mongo_db()
         audit_details = {
-            'admin_id': str(current_user.id) if current_user.is_authenticated else 'system',
+            'user_id': str(current_user.id) if current_user.is_authenticated else details.get('user_id', 'unknown'),
             'action': action,
             'details': details or {},
             'timestamp': datetime.utcnow(),
@@ -217,9 +217,11 @@ def login():
     if request.method == 'POST':
         logger.debug(f"Received POST request for login, form data: {request.form}, session_id: {session.get('session_id')}")
         if form.validate_on_submit():
+            identifier = form.username.data.strip().lower()
+            password = form.password.data
+            user_id_for_log = identifier # Use a more informative variable name
+
             try:
-                identifier = form.username.data.strip().lower()
-                password = form.password.data
                 logger.info(f"Login attempt for identifier: {identifier}, session_id: {session['session_id']}")
                 
                 db = get_mongo_db()
@@ -231,10 +233,11 @@ def login():
                 if not user:
                     logger.warning(f"Login attempt failed: Identifier {identifier} not found")
                     flash(trans('general_identifier_not_found', default='Username or Email not found. Please check your signup details.'), 'danger')
-                    log_audit_action('login_failed', {'identifier': identifier, 'reason': 'identifier_not_found'})
+                    log_audit_action('login_failed', {'identifier': identifier, 'user_id': user_id_for_log, 'reason': 'identifier_not_found'})
                     return render_template('users/login.html', form=form, title=trans('general_login', lang=session.get('lang', 'en')), background_color='#FFF8F0'), 401
 
                 username = user['_id']
+                user_id_for_log = username # Update user_id for logging if user is found
                 if not check_password_hash(user['password_hash'], password):
                     logger.warning(f"Login attempt failed for username: {username} (invalid password)")
                     flash(trans('general_invalid_password', default='Incorrect password'), 'danger')
@@ -243,7 +246,10 @@ def login():
 
                 logger.info(f"User found: {username}, proceeding with login")
                 from models import User
+                
+                # The fix is here. The User class needs to accept these arguments.
                 user_obj = User(user['_id'], user['email'], user.get('display_name'), user.get('role', 'personal'))
+                
                 login_result = login_user(user_obj, remember=form.remember.data)
                 if not login_result:
                     logger.error(f"login_user failed for {username} without raising an exception")
@@ -260,12 +266,12 @@ def login():
             except PyMongoError as e:
                 logger.error(f"MongoDB error during login for {identifier}: {str(e)}", exc_info=True)
                 flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-                log_audit_action('login_failed', {'identifier': identifier, 'reason': 'mongodb_error', 'error': str(e)})
+                log_audit_action('login_failed', {'user_id': user_id_for_log, 'reason': 'mongodb_error', 'error': str(e)})
                 return render_template('users/login.html', form=form, title=trans('general_login', lang=session.get('lang', 'en')), background_color='#FFF8F0'), 500
             except Exception as e:
                 logger.error(f"Unexpected error during login for {identifier}: {str(e)}", exc_info=True)
                 flash(trans('general_error', default='An error occurred. Please try again.'), 'danger')
-                log_audit_action('login_failed', {'identifier': identifier, 'reason': 'unexpected_error', 'error': str(e)})
+                log_audit_action('login_failed', {'user_id': user_id_for_log, 'reason': 'unexpected_error', 'error': str(e)})
                 return render_template('users/login.html', form=form, title=trans('general_login', lang=session.get('lang', 'en')), background_color='#FFF8F0'), 500
         else:
             logger.debug(f"Form validation failed: {form.errors}, session_id: {session.get('session_id')}")
@@ -301,13 +307,13 @@ def signup():
             if db.users.find_one({'_id': username}):
                 flash(trans('general_username_exists', default='Username already exists'), 'danger')
                 logger.warning(f"Signup failed: Username {username} already exists")
-                log_audit_action('signup_failed', {'username': username, 'email': email, 'reason': 'username_exists'})
+                log_audit_action('signup_failed', {'username': username, 'email': email, 'user_id': 'signup_attempt', 'reason': 'username_exists'})
                 return render_template('users/signup.html', form=form, title=trans('general_signup', lang=session.get('lang', 'en')), background_color='#FFF8F0')
 
             if db.users.find_one({'email': email}):
                 flash(trans('general_email_exists', default='Email already exists'), 'danger')
                 logger.warning(f"Signup failed: Email {email} already exists")
-                log_audit_action('signup_failed', {'username': username, 'email': email, 'reason': 'email_exists'})
+                log_audit_action('signup_failed', {'username': username, 'email': email, 'user_id': 'signup_attempt', 'reason': 'email_exists'})
                 return render_template('users/signup.html', form=form, title=trans('general_signup', lang=session.get('lang', 'en')), background_color='#FFF8F0')
 
             user_data = {
@@ -356,22 +362,22 @@ def signup():
         except WriteError as we:
             logger.error(f"Document validation error during signup for {username}: {str(we)}", exc_info=True)
             flash(trans('general_validation_error', default='Invalid data provided'), 'danger')
-            log_audit_action('signup_failed', {'username': username, 'email': email, 'reason': 'validation_error', 'error': str(we)})
+            log_audit_action('signup_failed', {'username': username, 'email': email, 'user_id': 'signup_attempt', 'reason': 'validation_error', 'error': str(we)})
             return render_template('users/signup.html', form=form, title=trans('general_signup', lang=session.get('lang', 'en')), background_color='#FFF8F0'), 400
         except DuplicateKeyError:
             logger.error(f"Duplicate key error during signup for {username}: Username or email already exists", exc_info=True)
             flash(trans('general_duplicate_user', default='Username or email already taken'), 'danger')
-            log_audit_action('signup_failed', {'username': username, 'email': email, 'reason': 'duplicate_key'})
+            log_audit_action('signup_failed', {'username': username, 'email': email, 'user_id': 'signup_attempt', 'reason': 'duplicate_key'})
             return render_template('users/signup.html', form=form, title=trans('general_signup', lang=session.get('lang', 'en')), background_color='#FFF8F0'), 400
         except PyMongoError as e:
             logger.error(f"MongoDB error during signup for {username}: {str(e)}", exc_info=True)
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
-            log_audit_action('signup_failed', {'username': username, 'email': email, 'reason': 'mongodb_error', 'error': str(e)})
+            log_audit_action('signup_failed', {'username': username, 'email': email, 'user_id': 'signup_attempt', 'reason': 'mongodb_error', 'error': str(e)})
             return render_template('users/signup.html', form=form, title=trans('general_signup', lang=session.get('lang', 'en')), background_color='#FFF8F0'), 500
         except Exception as e:
             logger.error(f"Unexpected error during signup for {username}: {str(e)}", exc_info=True)
             flash(trans('general_error', default='An error occurred. Please try again.'), 'danger')
-            log_audit_action('signup_failed', {'username': username, 'email': email, 'reason': 'unexpected_error', 'error': str(e)})
+            log_audit_action('signup_failed', {'username': username, 'email': email, 'user_id': 'signup_attempt', 'reason': 'unexpected_error', 'error': str(e)})
             return render_template('users/signup.html', form=form, title=trans('general_signup', lang=session.get('lang', 'en')), background_color='#FFF8F0'), 500
     else:
         logger.debug(f"Signup form validation failed: {form.errors}, session_id: {session.get('session_id')}")
@@ -506,4 +512,3 @@ def logout():
         response.set_cookie(current_app.config['SESSION_COOKIE_NAME'], '', expires=0, httponly=True, secure=current_app.config.get('SESSION_COOKIE_SECURE', True))
         response.set_cookie('remember_token', '', expires=0, httponly=True, secure=True)
         return response
-
