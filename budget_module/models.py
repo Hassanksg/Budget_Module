@@ -10,7 +10,7 @@ from translations import trans
 
 def get_db():
     """Get MongoDB database connection using the global client from utils.py.
-    
+   
     Returns:
         Database object
     """
@@ -24,7 +24,7 @@ def get_db():
 
 def initialize_app_data(app):
     """Initialize MongoDB collections and indexes for budget-related collections.
-    
+   
     Args:
         app: Flask application instance
     """
@@ -33,7 +33,7 @@ def initialize_app_data(app):
             db = get_db()
             db.command('ping')
             logger.info(f"{trans('general_database_connection_established', default='MongoDB connection established')}", extra={'session_id': 'no-session-id'})
-
+            
             # Check for existing ficorerecords user
             if not db.users.find_one({'_id': 'ficorerecords'}):
                 try:
@@ -48,8 +48,9 @@ def initialize_app_data(app):
                     logger.info("Created ficorerecords user", extra={'session_id': 'no-session-id'})
                 except DuplicateKeyError:
                     logger.warning("ficorerecords user already exists", extra={'session_id': 'no-session-id'})
-
+            
             collections = db.list_collection_names()
+            
             # Define collection schemas
             collection_schemas = {
                 'users': {
@@ -163,7 +164,7 @@ def initialize_app_data(app):
                     ]
                 }
             }
-
+            
             # Initialize collections and indexes
             for collection_name, config in collection_schemas.items():
                 if collection_name in collections:
@@ -182,7 +183,7 @@ def initialize_app_data(app):
                     except Exception as e:
                         logger.error(f"Failed to create collection {collection_name}: {str(e)}", exc_info=True, extra={'session_id': 'no-session-id'})
                         raise
-
+                
                 # Manage indexes
                 existing_indexes = db[collection_name].index_information()
                 for index in config.get('indexes', []):
@@ -200,6 +201,7 @@ def initialize_app_data(app):
                                 if existing_index_name != '_id_':
                                     logger.warning(f"Dropping conflicting index {existing_index_name} on {collection_name} to create new one")
                                     db[collection_name].drop_index(existing_index_name)
+                    
                     if not index_found:
                         try:
                             index_name = options.get('name', None)
@@ -211,9 +213,8 @@ def initialize_app_data(app):
                         except PyMongoError as e:
                             logger.error(f"Failed to create index on {collection_name}: {str(e)}", exc_info=True, extra={'session_id': 'no-session-id'})
                             raise
-
         except Exception as e:
-            logger.error(f"{trans('general_database_initialization_failed', default='Failed to initialize database')}: {str(e)}", 
+            logger.error(f"{trans('general_database_initialization_failed', default='Failed to initialize database')}: {str(e)}",
                         exc_info=True, extra={'session_id': 'no-session-id'})
             raise
 
@@ -234,6 +235,8 @@ class User(UserMixin):
         self.security_settings = user_doc.get('security_settings', {})
         self.profile_picture = user_doc.get('profile_picture', None)
         self.display_name = user_doc.get('display_name', '')
+        self.is_admin = user_doc.get('is_admin', False)
+        self.username = user_doc.get('username', '')
 
     @property
     def is_active(self):
@@ -243,7 +246,7 @@ class User(UserMixin):
 
     def get_id(self):
         return str(self.id)
-    
+   
     def get_first_name(self):
         """Get the first name from display_name or email"""
         if self.display_name and self.display_name != self.id:
@@ -252,28 +255,28 @@ class User(UserMixin):
 
 def get_budgets(db, filter_kwargs):
     """Retrieve budget records based on filter criteria.
-    
+   
     Args:
         db: MongoDB database instance
         filter_kwargs: Dictionary of filter criteria
-    
+   
     Returns:
         list: List of budget records
     """
     try:
         return list(db.budgets.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
-        logger.error(f"{trans('general_budgets_fetch_error', default='Error getting budgets')}: {str(e)}", 
+        logger.error(f"{trans('general_budgets_fetch_error', default='Error getting budgets')}: {str(e)}",
                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
 
 def create_budget(db, budget_data):
     """Create a new budget record in the budgets collection.
-    
+   
     Args:
         db: MongoDB database instance
         budget_data: Dictionary containing budget information
-    
+   
     Returns:
         str: ID of the created budget record
     """
@@ -282,50 +285,52 @@ def create_budget(db, budget_data):
         if not all(field in budget_data for field in required_fields):
             raise ValueError(trans('general_missing_budget_fields', default='Missing required budget fields'))
         budget_data['custom_categories'] = budget_data.get('custom_categories', [])
-        logger.debug(f"Inserting budget_data into {db.budgets.name}: {budget_data}", 
+        budget_data['session_id'] = str(budget_data.get('session_id', 'no-session-id'))  # Ensure session_id is a string
+        logger.debug(f"Inserting budget_data into {db.budgets.name}: {budget_data}",
                     extra={'session_id': budget_data.get('session_id', 'no-session-id')})
         result = db.budgets.insert_one(budget_data)
-        logger.info(f"{trans('general_budget_created', default='Created budget record with ID')}: {result.inserted_id}", 
+        logger.info(f"{trans('general_budget_created', default='Created budget record with ID')}: {result.inserted_id}",
                     extra={'session_id': budget_data.get('session_id', 'no-session-id')})
         return str(result.inserted_id)
     except WriteError as e:
-        logger.error(f"WriteError creating budget record: {str(e)}", 
+        logger.error(f"WriteError creating budget record: {str(e)}",
                     exc_info=True, extra={'session_id': budget_data.get('session_id', 'no-session-id')})
         raise
     except Exception as e:
-        logger.error(f"Unexpected error creating budget record: {str(e)}", 
+        logger.error(f"Unexpected error creating budget record: {str(e)}",
                     exc_info=True, extra={'session_id': budget_data.get('session_id', 'no-session-id')})
         raise
 
 def update_budget(db, budget_id, update_data):
     """Update a budget record in the budgets collection.
-    
+   
     Args:
         db: MongoDB database instance
         budget_id: The ID of the budget record to update
         update_data: Dictionary containing fields to update
-    
+   
     Returns:
         bool: True if updated, False if not found or no changes made
     """
     try:
+        update_data['updated_at'] = datetime.utcnow()
         result = db.budgets.update_one(
             {'_id': ObjectId(budget_id)},
             {'$set': update_data}
         )
         if result.modified_count > 0:
-            logger.info(f"{trans('general_budget_updated', default='Updated budget record with ID')}: {budget_id}", 
+            logger.info(f"{trans('general_budget_updated', default='Updated budget record with ID')}: {budget_id}",
                         extra={'session_id': 'no-session-id'})
             return True
-        logger.info(f"{trans('general_budget_no_change', default='No changes made to budget record with ID')}: {budget_id}", 
+        logger.info(f"{trans('general_budget_no_change', default='No changes made to budget record with ID')}: {budget_id}",
                     extra={'session_id': 'no-session-id'})
         return False
     except WriteError as e:
-        logger.error(f"{trans('general_budget_update_error', default='Error updating budget record with ID')} {budget_id}: {str(e)}", 
+        logger.error(f"{trans('general_budget_update_error', default='Error updating budget record with ID')} {budget_id}: {str(e)}",
                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
     except Exception as e:
-        logger.error(f"{trans('general_budget_update_error', default='Error updating budget record with ID')} {budget_id}: {str(e)}", 
+        logger.error(f"{trans('general_budget_update_error', default='Error updating budget record with ID')} {budget_id}: {str(e)}",
                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
 
@@ -335,6 +340,8 @@ def to_dict_budget(record):
         return {'surplus_deficit': None, 'savings_goal': None}
     return {
         'id': str(record.get('_id', '')),
+        'user_id': record.get('user_id', ''),
+        'session_id': str(record.get('session_id', '')),
         'income': record.get('income', 0),
         'fixed_expenses': record.get('fixed_expenses', 0),
         'variable_expenses': record.get('variable_expenses', 0),
@@ -352,11 +359,11 @@ def to_dict_budget(record):
 
 def get_user(db, user_id):
     """Get user by ID.
-    
+   
     Args:
         db: MongoDB database instance
         user_id: User ID
-    
+   
     Returns:
         User object or None
     """
@@ -371,11 +378,11 @@ def get_user(db, user_id):
 
 def get_user_by_email(db, email):
     """Get user by email.
-    
+   
     Args:
         db: MongoDB database instance
         email: User email
-    
+   
     Returns:
         User object or None
     """
@@ -390,11 +397,11 @@ def get_user_by_email(db, email):
 
 def create_user(db, user_data):
     """Create a new user in the database.
-    
+   
     Args:
         db: MongoDB database instance
         user_data: Dictionary containing user information
-    
+   
     Returns:
         str: ID of the created user
     """
@@ -415,27 +422,27 @@ def create_user(db, user_data):
         logger.info(f"Created user with ID: {result.inserted_id}", extra={'session_id': 'no-session-id'})
         return str(result.inserted_id)
     except DuplicateKeyError as e:
-        logger.error(f"Duplicate key error creating user with user_id {user_data.get('user_id')}: {str(e)}", 
+        logger.error(f"Duplicate key error creating user with user_id {user_data.get('user_id')}: {str(e)}",
                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
     except WriteError as e:
-        logger.error(f"WriteError creating user: {str(e)}", 
+        logger.error(f"WriteError creating user: {str(e)}",
                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
     except Exception as e:
-        logger.error(f"Unexpected error creating user: {str(e)}", 
+        logger.error(f"Unexpected error creating user: {str(e)}",
                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
 
 def update_user_balance(db, user_id, amount, session_id='no-session-id'):
     """Update a user's ficore_credit_balance atomically.
-    
+   
     Args:
         db: MongoDB database instance
         user_id: The ID of the user to update
         amount: The amount to add to the balance (can be positive or negative)
         session_id: Session ID for logging
-    
+   
     Returns:
         bool: True if updated, False otherwise
     """
@@ -445,111 +452,120 @@ def update_user_balance(db, user_id, amount, session_id='no-session-id'):
             {'$inc': {'ficore_credit_balance': amount}}
         )
         if result.modified_count > 0:
-            logger.info(f"Updated user {user_id} ficore_credit_balance by {amount}", 
+            logger.info(f"Updated user {user_id} ficore_credit_balance by {amount}",
                         extra={'session_id': session_id})
             return True
         return False
     except WriteError as e:
-        logger.error(f"Error updating user balance for {user_id}: {str(e)}", 
+        logger.error(f"Error updating user balance for {user_id}: {str(e)}",
                     exc_info=True, extra={'session_id': session_id})
         raise
     except Exception as e:
-        logger.error(f"Error updating user balance for {user_id}: {str(e)}", 
+        logger.error(f"Error updating user balance for {user_id}: {str(e)}",
                     exc_info=True, extra={'session_id': session_id})
         raise
 
 def get_ficore_credit_transactions(db, filter_kwargs):
     """Retrieve ficore credit transactions based on filter criteria.
-    
+   
     Args:
         db: MongoDB database instance
         filter_kwargs: Dictionary of filter criteria
-    
+   
     Returns:
         list: List of transaction records
     """
     try:
         return list(db.ficore_credit_transactions.find(filter_kwargs).sort('timestamp', DESCENDING))
     except Exception as e:
-        logger.error(f"Error getting ficore credit transactions: {str(e)}", 
+        logger.error(f"Error getting ficore credit transactions: {str(e)}",
                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
 
 def to_dict_ficore_credit_transaction(transaction):
     """Convert a ficore_credit_transaction document to a dictionary."""
+    if not transaction:
+        return {}
     return {
         'user_id': str(transaction.get('user_id', '')),
         'action': transaction.get('action', ''),
         'amount': transaction.get('amount', 0),
         'timestamp': transaction.get('timestamp', None),
-        'session_id': transaction.get('session_id', ''),
+        'session_id': str(transaction.get('session_id', '')),
         'status': transaction.get('status', ''),
-        'budget_id': transaction.get('budget_id', None)
+        'budget_id': str(transaction.get('budget_id', '')) if transaction.get('budget_id') else None
     }
 
 def create_credit_request(db, request_data):
     """Insert a new credit request document into the credit_requests collection.
-    
+   
     Args:
         db: MongoDB database instance
         request_data: Dictionary containing request info
-    
+   
     Returns:
         str: Inserted request ID
     """
     try:
+        request_data['session_id'] = str(request_data.get('session_id', 'no-session-id'))  # Ensure session_id is a string
         result = db.credit_requests.insert_one(request_data)
+        logger.info(f"Created credit request with ID: {result.inserted_id}", extra={'session_id': request_data.get('session_id', 'no-session-id')})
         return str(result.inserted_id)
     except Exception as e:
-        logger.error(f"Error creating credit request: {str(e)}", 
+        logger.error(f"Error creating credit request: {str(e)}",
                     exc_info=True, extra={'session_id': request_data.get('session_id', 'no-session-id')})
         raise
 
 def update_credit_request(db, request_id, update_data):
     """Update a credit request document by ID.
-    
+   
     Args:
         db: MongoDB database instance
         request_id: The ID (_id) of the credit request
         update_data: dict of fields to update
-    
+   
     Returns:
         bool: True if updated, False otherwise
     """
     try:
+        update_data['updated_at'] = datetime.utcnow()
         result = db.credit_requests.update_one(
             {'_id': ObjectId(request_id)},
             {'$set': update_data}
         )
-        return result.modified_count > 0
+        if result.modified_count > 0:
+            logger.info(f"Updated credit request with ID: {request_id}", extra={'session_id': 'no-session-id'})
+            return True
+        logger.info(f"No changes made to credit request with ID: {request_id}", extra={'session_id': 'no-session-id'})
+        return False
     except Exception as e:
-        logger.error(f"Error updating credit request {request_id}: {str(e)}", 
+        logger.error(f"Error updating credit request {request_id}: {str(e)}",
                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
 
 def get_credit_requests(db, filter_kwargs):
     """Retrieve credit request documents matching filter.
-    
+   
     Args:
         db: MongoDB database instance
         filter_kwargs: dict of filter criteria
-    
+   
     Returns:
         list: List of requests
     """
     try:
-        return list(db.credit_requests.find(filter_kwargs).sort('created_at', -1))
+        return list(db.credit_requests.find(filter_kwargs).sort('created_at', DESCENDING))
     except Exception as e:
-        logger.error(f"Error fetching credit requests: {str(e)}", 
+        logger.error(f"Error fetching credit requests: {str(e)}",
                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
 
 def to_dict_credit_request(doc):
     """Convert a credit request document to a serializable dict.
-    
+   
     Args:
         doc: MongoDB document
-    
+   
     Returns:
         dict
     """
@@ -569,18 +585,20 @@ def to_dict_credit_request(doc):
 
 def create_feedback(db, feedback_data):
     """Insert a feedback document into the feedback collection.
-    
+   
     Args:
         db: MongoDB database instance
         feedback_data: dict containing feedback info
-    
+   
     Returns:
         str: Inserted feedback ID
     """
     try:
+        feedback_data['session_id'] = str(feedback_data.get('session_id', 'no-session-id'))  # Ensure session_id is a string
         result = db.feedback.insert_one(feedback_data)
+        logger.info(f"Created feedback with ID: {result.inserted_id}", extra={'session_id': feedback_data.get('session_id', 'no-session-id')})
         return str(result.inserted_id)
     except Exception as e:
-        logger.error(f"Error creating feedback: {str(e)}", 
+        logger.error(f"Error creating feedback: {str(e)}",
                     exc_info=True, extra={'session_id': feedback_data.get('session_id', 'no-session-id')})
         raise
