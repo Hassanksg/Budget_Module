@@ -43,13 +43,21 @@ def strip_commas(value):
     """Filter to remove commas and return a float."""
     return clean_currency(value)
 
-def format_currency(value):
-    """Format a numeric value with comma separation, no currency symbol."""
+def format_currency(value, currency='USD'):
+    """Format a numeric value with comma separation and currency symbol."""
+    symbols = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'NGN': '₦',
+        'other': ''
+    }
+    symbol = symbols.get(currency, '')
     try:
         numeric_value = float(value)
-        return f"{numeric_value:,.2f}"
+        return f"{symbol}{numeric_value:,.2f}"
     except (ValueError, TypeError):
-        return "0.00"
+        return f"{symbol}0.00"
 
 def deduct_ficore_credits(db, user_id, amount, action, budget_id=None):
     """
@@ -293,8 +301,13 @@ def new():
     """Create a new budget with Ficore Credits deduction."""
     session_id = session.get('sid', str(uuid.uuid4()))
     session['sid'] = session_id
-    form = BudgetForm()
     db = get_mongo_db()
+    user = db.users.find_one({'_id': current_user.id})
+    user_currency = user.get('currency', 'USD') if user else 'USD'
+    user_dependents = user.get('dependents', 0) if user else 0
+    user_goals = user.get('financial_goals', []) if user else []
+    form = BudgetForm()
+    form.dependents.data = user_dependents  # Prefill from setup
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json
 
     try:
@@ -374,7 +387,7 @@ def new():
             flash(error_message, 'danger')
 
     budgets = list(db.budgets.find({'user_id': current_user.id}).sort('created_at', -1).limit(10))
-    budgets_dict, latest_budget = process_budgets(budgets, session_id)
+    budgets_dict, latest_budget = process_budgets(budgets, session_id, user_currency)
     categories = {
         trans('budget_housing_rent', default='Housing/Rent'): latest_budget.get('housing_raw', 0.0),
         trans('budget_food', default='Food'): latest_budget.get('food_raw', 0.0),
@@ -384,7 +397,7 @@ def new():
         **{cat['name']: cat['amount'] for cat in latest_budget.get('custom_categories', [])}
     }
     categories = {k: v for k, v in categories.items() if v > 0}
-    tips, insights = generate_tips_and_insights(latest_budget)
+    tips, insights = generate_tips_and_insights(latest_budget, user_goals)
 
     return render_template(
         'budget/new.html',
@@ -400,7 +413,8 @@ def new():
         button_color=FICORE_PRIMARY_COLOR,
         text_color=FICORE_TEXT_COLOR,
         success_color=FICORE_SUCCESS_COLOR,
-        danger_color=FICORE_DANGER_COLOR
+        danger_color=FICORE_DANGER_COLOR,
+        user_currency=user_currency
     )
 
 @budget_bp.route('/dashboard', methods=['GET'])
@@ -410,6 +424,9 @@ def dashboard():
     session_id = session.get('sid', str(uuid.uuid4()))
     session['sid'] = session_id
     db = get_mongo_db()
+    user = db.users.find_one({'_id': current_user.id})
+    user_currency = user.get('currency', 'USD') if user else 'USD'
+    user_goals = user.get('financial_goals', []) if user else []
 
     try:
         activities = db.activities.find({'user_id': current_user.id, 'tool_name': 'budget'}).sort('timestamp', -1).limit(10)
@@ -424,7 +441,7 @@ def dashboard():
         activities = []
 
     budgets = list(db.budgets.find({'user_id': current_user.id}).sort('created_at', -1).limit(10))
-    budgets_dict, latest_budget = process_budgets(budgets, session_id)
+    budgets_dict, latest_budget = process_budgets(budgets, session_id, user_currency)
     categories = {
         trans('budget_housing_rent', default='Housing/Rent'): latest_budget.get('housing_raw', 0.0),
         trans('budget_food', default='Food'): latest_budget.get('food_raw', 0.0),
@@ -434,7 +451,7 @@ def dashboard():
         **{cat['name']: cat['amount'] for cat in latest_budget.get('custom_categories', [])}
     }
     categories = {k: v for k, v in categories.items() if v > 0}
-    tips, insights = generate_tips_and_insights(latest_budget)
+    tips, insights = generate_tips_and_insights(latest_budget, user_goals)
 
     return render_template(
         'budget/dashboard.html',
@@ -449,7 +466,8 @@ def dashboard():
         button_color=FICORE_PRIMARY_COLOR,
         text_color=FICORE_TEXT_COLOR,
         success_color=FICORE_SUCCESS_COLOR,
-        danger_color=FICORE_DANGER_COLOR
+        danger_color=FICORE_DANGER_COLOR,
+        user_currency=user_currency
     )
 
 @budget_bp.route('/manage', methods=['GET', 'POST'])
@@ -459,6 +477,8 @@ def manage():
     session_id = session.get('sid', str(uuid.uuid4()))
     session['sid'] = session_id
     db = get_mongo_db()
+    user = db.users.find_one({'_id': current_user.id})
+    user_currency = user.get('currency', 'USD') if user else 'USD'
 
     if request.method == 'POST':
         action = request.form.get('action')
@@ -495,7 +515,7 @@ def manage():
             return redirect(url_for('budget.manage'))
 
     budgets = list(db.budgets.find({'user_id': current_user.id}).sort('created_at', -1).limit(20))
-    budgets_dict, _ = process_budgets(budgets, session_id)
+    budgets_dict, _ = process_budgets(budgets, session_id, user_currency)
 
     return render_template(
         'budget/manage.html',
@@ -505,7 +525,8 @@ def manage():
         button_color=FICORE_PRIMARY_COLOR,
         text_color=FICORE_TEXT_COLOR,
         success_color=FICORE_SUCCESS_COLOR,
-        danger_color=FICORE_DANGER_COLOR
+        danger_color=FICORE_DANGER_COLOR,
+        user_currency=user_currency
     )
 
 @budget_bp.route('/summary', methods=['GET'])
@@ -514,21 +535,23 @@ def summary():
     """Return budget summary as JSON."""
     db = get_mongo_db()
     session_id = session.get('sid', str(uuid.uuid4()))
+    user = db.users.find_one({'_id': current_user.id})
+    user_currency = user.get('currency', 'USD') if user else 'USD'
     try:
         latest_budget = db.budgets.find_one({'user_id': current_user.id}, sort=[('created_at', -1)])
         if not latest_budget:
             return jsonify({
-                'totalBudget': format_currency(0.0),
+                'totalBudget': format_currency(0.0, user_currency),
                 'user_email': current_user.email
             })
         return jsonify({
-            'totalBudget': format_currency(latest_budget.get('income', 0.0)),
+            'totalBudget': format_currency(latest_budget.get('income', 0.0), user_currency),
             'user_email': latest_budget.get('user_email', current_user.email)
         })
     except Exception as e:
         logger.error(f"Error in budget.summary: {str(e)}", extra={'session_id': session_id})
         return jsonify({
-            'totalBudget': format_currency(0.0),
+            'totalBudget': format_currency(0.0, user_currency),
             'user_email': current_user.email
         }), 500
 
@@ -538,6 +561,8 @@ def export_pdf():
     """Export budget to PDF with Ficore Credits deduction."""
     session_id = session.get('sid', str(uuid.uuid4()))
     db = get_mongo_db()
+    user = db.users.find_one({'_id': current_user.id})
+    user_currency = user.get('currency', 'USD') if user else 'USD'
     budget_id = request.args.get('budget_id')
     is_single_budget = bool(budget_id)
     credit_cost = 1 if is_single_budget else 2
@@ -579,6 +604,7 @@ def export_pdf():
         y = height - 150
         p.drawString(50, y, f"Generated: {format_date(datetime.utcnow())}")
         p.drawString(50, y - 20, f"Total Budget Records: {len(budgets)}")
+        p.drawString(50, y - 40, f"Currency: {user_currency}")
         y -= 60
 
         if is_single_budget:
@@ -588,23 +614,23 @@ def export_pdf():
             y -= 20
             p.setFont("Helvetica", 10)
             p.drawString(50, y, f"Date: {format_date(budget.get('created_at'))}")
-            p.drawString(50, y - 15, f"Income: {format_currency(budget.get('income', 0))}")
-            p.drawString(50, y - 30, f"Fixed Expenses: {format_currency(budget.get('fixed_expenses', 0))}")
-            p.drawString(50, y - 45, f"Variable Expenses: {format_currency(budget.get('variable_expenses', 0))}")
-            p.drawString(50, y - 60, f"Total Expenses: {format_currency(float(budget.get('fixed_expenses', 0)) + float(budget.get('variable_expenses', 0)))}")
-            p.drawString(50, y - 75, f"Savings Goal: {format_currency(budget.get('savings_goal', 0))}")
-            p.drawString(50, y - 90, f"Surplus/Deficit: {format_currency(budget.get('surplus_deficit', 0))}")
+            p.drawString(50, y - 15, f"Income: {format_currency(budget.get('income', 0), user_currency)}")
+            p.drawString(50, y - 30, f"Fixed Expenses: {format_currency(budget.get('fixed_expenses', 0), user_currency)}")
+            p.drawString(50, y - 45, f"Variable Expenses: {format_currency(budget.get('variable_expenses', 0), user_currency)}")
+            p.drawString(50, y - 60, f"Total Expenses: {format_currency(float(budget.get('fixed_expenses', 0)) + float(budget.get('variable_expenses', 0)), user_currency)}")
+            p.drawString(50, y - 75, f"Savings Goal: {format_currency(budget.get('savings_goal', 0), user_currency)}")
+            p.drawString(50, y - 90, f"Surplus/Deficit: {format_currency(budget.get('surplus_deficit', 0), user_currency)}")
             p.drawString(50, y - 105, f"Dependents: {budget.get('dependents', 0)}")
             y -= 125
             p.setFont("Helvetica-Bold", 10)
             p.drawString(50, y, "Expense Categories")
             y -= 15
             p.setFont("Helvetica", 9)
-            p.drawString(50, y, f"Housing: {format_currency(budget.get('housing', 0))}")
-            p.drawString(50, y - 15, f"Food: {format_currency(budget.get('food', 0))}")
-            p.drawString(50, y - 30, f"Transport: {format_currency(budget.get('transport', 0))}")
-            p.drawString(50, y - 45, f"Miscellaneous: {format_currency(budget.get('miscellaneous', 0))}")
-            p.drawString(50, y - 60, f"Others: {format_currency(budget.get('others', 0))}")
+            p.drawString(50, y, f"Housing: {format_currency(budget.get('housing', 0), user_currency)}")
+            p.drawString(50, y - 15, f"Food: {format_currency(budget.get('food', 0), user_currency)}")
+            p.drawString(50, y - 30, f"Transport: {format_currency(budget.get('transport', 0), user_currency)}")
+            p.drawString(50, y - 45, f"Miscellaneous: {format_currency(budget.get('miscellaneous', 0), user_currency)}")
+            p.drawString(50, y - 60, f"Others: {format_currency(budget.get('others', 0), user_currency)}")
             y -= 75
             if budget.get('custom_categories', []):
                 p.setFont("Helvetica-Bold", 10)
@@ -617,7 +643,7 @@ def export_pdf():
                         draw_ficore_pdf_header(p, current_user, y_start=height/inch - 0.7)
                         y = height - 50
                         p.setFont("Helvetica", 9)
-                    p.drawString(50, y, f"{cat['name']}: {format_currency(cat['amount'])}")
+                    p.drawString(50, y, f"{cat['name']}: {format_currency(cat['amount'], user_currency)}")
                     y -= 15
         else:
             p.setFont("Helvetica-Bold", 10)
@@ -644,11 +670,11 @@ def export_pdf():
                     y -= 20
                     p.setFont("Helvetica", 9)
                 p.drawString(50, y, format_date(budget.get('created_at')))
-                p.drawString(150, y, format_currency(budget.get('income', 0)))
-                p.drawString(220, y, format_currency(budget.get('fixed_expenses', 0)))
-                p.drawString(290, y, format_currency(budget.get('variable_expenses', 0)))
-                p.drawString(370, y, format_currency(budget.get('savings_goal', 0)))
-                p.drawString(450, y, format_currency(budget.get('surplus_deficit', 0)))
+                p.drawString(150, y, format_currency(budget.get('income', 0), user_currency))
+                p.drawString(220, y, format_currency(budget.get('fixed_expenses', 0), user_currency))
+                p.drawString(290, y, format_currency(budget.get('variable_expenses', 0), user_currency))
+                p.drawString(370, y, format_currency(budget.get('savings_goal', 0), user_currency))
+                p.drawString(450, y, format_currency(budget.get('surplus_deficit', 0), user_currency))
                 y -= 15
 
         p.save()
@@ -705,7 +731,7 @@ def delete_budget():
         logger.error(f"Error deleting budget: {str(e)}", extra={'session_id': session_id})
         return jsonify({'success': False, 'error': trans('budget_delete_error', default='Error deleting budget.')}), 500
 
-def process_budgets(budgets, session_id):
+def process_budgets(budgets, session_id, user_currency):
     """Helper function to process budgets for rendering."""
     budgets_dict = {}
     latest_budget = None
@@ -718,29 +744,29 @@ def process_budgets(budgets, session_id):
             'user_id': budget.get('user_id'),
             'session_id': budget.get('session_id'),
             'user_email': budget.get('user_email', current_user.email),
-            'income': format_currency(budget.get('income', 0.0)),
+            'income': format_currency(budget.get('income', 0.0), user_currency),
             'income_raw': float(budget.get('income', 0.0)),
-            'fixed_expenses': format_currency(fixed_raw),
+            'fixed_expenses': format_currency(fixed_raw, user_currency),
             'fixed_expenses_raw': fixed_raw,
-            'variable_expenses': format_currency(var_raw),
+            'variable_expenses': format_currency(var_raw, user_currency),
             'variable_expenses_raw': var_raw,
-            'total_expenses': format_currency(total_raw),
+            'total_expenses': format_currency(total_raw, user_currency),
             'total_expenses_raw': total_raw,
-            'savings_goal': format_currency(budget.get('savings_goal', 0.0)),
+            'savings_goal': format_currency(budget.get('savings_goal', 0.0), user_currency),
             'savings_goal_raw': float(budget.get('savings_goal', 0.0)),
             'surplus_deficit': float(budget.get('surplus_deficit', 0.0)),
-            'surplus_deficit_formatted': format_currency(budget.get('surplus_deficit', 0.0)),
-            'housing': format_currency(budget.get('housing', 0.0)),
+            'surplus_deficit_formatted': format_currency(budget.get('surplus_deficit', 0.0), user_currency),
+            'housing': format_currency(budget.get('housing', 0.0), user_currency),
             'housing_raw': float(budget.get('housing', 0.0)),
-            'food': format_currency(budget.get('food', 0.0)),
+            'food': format_currency(budget.get('food', 0.0), user_currency),
             'food_raw': float(budget.get('food', 0.0)),
-            'transport': format_currency(budget.get('transport', 0.0)),
+            'transport': format_currency(budget.get('transport', 0.0), user_currency),
             'transport_raw': float(budget.get('transport', 0.0)),
             'dependents': str(budget.get('dependents', 0)),
             'dependents_raw': int(budget.get('dependents', 0)),
-            'miscellaneous': format_currency(budget.get('miscellaneous', 0.0)),
+            'miscellaneous': format_currency(budget.get('miscellaneous', 0.0), user_currency),
             'miscellaneous_raw': float(budget.get('miscellaneous', 0.0)),
-            'others': format_currency(budget.get('others', 0.0)),
+            'others': format_currency(budget.get('others', 0.0), user_currency),
             'others_raw': float(budget.get('others', 0.0)),
             'custom_categories': budget.get('custom_categories', []),
             'created_at': format_date(budget.get('created_at')) if budget.get('created_at') else 'N/A'
@@ -754,36 +780,36 @@ def process_budgets(budgets, session_id):
             'user_id': None,
             'session_id': session_id,
             'user_email': current_user.email,
-            'income': format_currency(0.0),
+            'income': format_currency(0.0, user_currency),
             'income_raw': 0.0,
-            'fixed_expenses': format_currency(0.0),
+            'fixed_expenses': format_currency(0.0, user_currency),
             'fixed_expenses_raw': 0.0,
-            'variable_expenses': format_currency(0.0),
+            'variable_expenses': format_currency(0.0, user_currency),
             'variable_expenses_raw': 0.0,
-            'total_expenses': format_currency(0.0),
+            'total_expenses': format_currency(0.0, user_currency),
             'total_expenses_raw': 0.0,
-            'savings_goal': format_currency(0.0),
+            'savings_goal': format_currency(0.0, user_currency),
             'savings_goal_raw': 0.0,
             'surplus_deficit': 0.0,
-            'surplus_deficit_formatted': format_currency(0.0),
-            'housing': format_currency(0.0),
+            'surplus_deficit_formatted': format_currency(0.0, user_currency),
+            'housing': format_currency(0.0, user_currency),
             'housing_raw': 0.0,
-            'food': format_currency(0.0),
+            'food': format_currency(0.0, user_currency),
             'food_raw': 0.0,
-            'transport': format_currency(0.0),
+            'transport': format_currency(0.0, user_currency),
             'transport_raw': 0.0,
             'dependents': str(0),
             'dependents_raw': 0,
-            'miscellaneous': format_currency(0.0),
+            'miscellaneous': format_currency(0.0, user_currency),
             'miscellaneous_raw': 0.0,
-            'others': format_currency(0.0),
+            'others': format_currency(0.0, user_currency),
             'others_raw': 0.0,
             'custom_categories': [],
             'created_at': 'N/A'
         }
     return budgets_dict, latest_budget
 
-def generate_tips_and_insights(latest_budget):
+def generate_tips_and_insights(latest_budget, user_goals):
     """Generate budget tips and insights."""
     tips = [
         trans("budget_tip_track_expenses", default='Track your expenses daily to stay within budget.'),
@@ -791,6 +817,20 @@ def generate_tips_and_insights(latest_budget):
         trans("budget_tip_data_subscriptions", default='Optimize data subscriptions to reduce costs.'),
         trans("budget_tip_plan_dependents", default='Plan for dependents’ expenses in advance.')
     ]
+    # Personalize tips based on goals
+    if 'emergency_fund' in user_goals:
+        tips.append(trans("budget_tip_emergency_fund", default='Prioritize building your emergency fund to cover 3-6 months of expenses.'))
+    if 'debt_payoff' in user_goals:
+        tips.append(trans("budget_tip_debt_payoff", default='Allocate extra funds to high-interest debt for faster payoff.'))
+    if 'retirement' in user_goals:
+        tips.append(trans("budget_tip_retirement", default='Increase contributions to retirement savings for long-term security.'))
+    if 'savings_vacation' in user_goals:
+        tips.append(trans("budget_tip_vacation", default='Set aside a small amount weekly for your vacation fund.'))
+    if 'home_purchase' in user_goals:
+        tips.append(trans("budget_tip_home", default='Save aggressively for a down payment on your future home.'))
+    if 'other' in user_goals:
+        tips.append(trans("budget_tip_other", default='Customize your budget to align with your unique financial objectives.'))
+
     insights = []
     try:
         income_float = float(latest_budget.get('income_raw', 0.0))
