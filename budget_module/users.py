@@ -6,7 +6,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, TextAreaField, SelectField, SubmitField, BooleanField, validators
 from flask_login import login_required, current_user, login_user, logout_user
-from pymongo import errors
+from pymongo.errors import PyMongoError, WriteError, DuplicateKeyError
 from werkzeug.security import generate_password_hash, check_password_hash
 import re
 from utils import get_mongo_db, logger, is_valid_email
@@ -143,7 +143,7 @@ def log_audit_action(action, details=None):
         }
         db.audit_logs.insert_one(audit_details)
         logger.debug(f"Audit log created: {audit_details}")
-    except errors.PyMongoError as e:
+    except PyMongoError as e:
         logger.error(f"MongoDB error logging audit action '{action}': {str(e)}", exc_info=True)
     except Exception as e:
         logger.error(f"Unexpected error logging audit action '{action}': {str(e)}", exc_info=True)
@@ -218,7 +218,7 @@ def login():
                 if not user.get('setup_complete', False):
                     return redirect(url_for('users.personal_setup_wizard'))
                 return redirect(get_post_login_redirect(user.get('role', 'personal')))
-            except errors.PyMongoError as e:
+            except PyMongoError as e:
                 logger.error(f"MongoDB error during login for {identifier}: {str(e)}", exc_info=True)
                 flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
                 log_audit_action('login_failed', {'identifier': identifier, 'reason': 'mongodb_error', 'error': str(e)})
@@ -246,12 +246,16 @@ def signup():
             flash(trans('general_error', default='An error occurred. Please try again.'), 'danger')
             return redirect(url_for('users.login')), 500
 
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+        logger.debug(f"Created new session_id: {session['session_id']}")
+
     form = SignupForm()
     if form.validate_on_submit():
         username = form.username.data.strip().lower()
         email = form.email.data.strip().lower()
         password = form.password.data
-        logger.debug(f"Signup attempt: username={username}, email={email}, session_id: {session.get('session_id')}")
+        logger.debug(f"Signup attempt: username={username}, email={email}, session_id: {session['session_id']}")
         try:
             db = get_mongo_db()
 
@@ -281,16 +285,25 @@ def signup():
                 'created_at': datetime.utcnow()
             }
 
-            user_obj = create_user(db, user_data)
+            with db.client.start_session() as mongo_session:
+                with mongo_session.start_transaction():
+                    user_id = create_user(db, user_data)
 
-            db.ficore_credit_transactions.insert_one({
-                'user_id': username,
-                'email': email,
-                'amount': 10,
-                'type': 'credit',
-                'description': 'Signup bonus',
-                'timestamp': datetime.utcnow()
-            })
+                    # Optionally log a signup bonus transaction
+                    log_transaction = request.form.get('log_transaction', 'false').lower() == 'true'
+                    if log_transaction:
+                        transaction = {
+                            'user_id': username,
+                            'action': 'signup_bonus',
+                            'amount': 10.0,
+                            'timestamp': datetime.utcnow(),
+                            'session_id': session['session_id'],
+                            'status': 'completed'
+                        }
+                        db.ficore_credit_transactions.insert_one(transaction, session=mongo_session)
+                    
+                    mongo_session.commit_transaction()
+
             log_audit_action('signup', {'user_id': username, 'email': email, 'role': 'personal'})
             logger.info(f"New user created: {username}, email: {email}, role: personal")
 
@@ -301,7 +314,17 @@ def signup():
             
             logger.info(f"User {username} logged in after signup. Session: {dict(session)}")
             return redirect(url_for('users.personal_setup_wizard'))
-        except errors.PyMongoError as e:
+        except WriteError as we:
+            logger.error(f"Document validation error during signup for {username}: {str(we)}", exc_info=True)
+            flash(trans('general_validation_error', default='Invalid data provided'), 'danger')
+            log_audit_action('signup_failed', {'username': username, 'email': email, 'reason': 'validation_error', 'error': str(we)})
+            return render_template('users/signup.html', form=form, title=trans('general_signup', lang=session.get('lang', 'en')), background_color='#FFF8F0'), 400
+        except DuplicateKeyError:
+            logger.error(f"Duplicate key error during signup for {username}: Username or email already exists", exc_info=True)
+            flash(trans('general_duplicate_user', default='Username or email already taken'), 'danger')
+            log_audit_action('signup_failed', {'username': username, 'email': email, 'reason': 'duplicate_key'})
+            return render_template('users/signup.html', form=form, title=trans('general_signup', lang=session.get('lang', 'en')), background_color='#FFF8F0'), 400
+        except PyMongoError as e:
             logger.error(f"MongoDB error during signup for {username}: {str(e)}", exc_info=True)
             flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
             log_audit_action('signup_failed', {'username': username, 'email': email, 'reason': 'mongodb_error', 'error': str(e)})
@@ -391,7 +414,7 @@ def personal_setup_wizard():
                 for error in errors:
                     flash(f"{field}: {error}", 'danger')
         return render_template('users/personal_setup.html', form=form, title=trans('general_personal_setup', lang=session.get('lang', 'en')), background_color='#FFF8F0')
-    except errors.PyMongoError as e:
+    except PyMongoError as e:
         logger.error(f"MongoDB error during personal setup for {user_id}: {str(e)}", exc_info=True)
         flash(trans('general_database_error', default='An error occurred while accessing the database. Please try again later.'), 'danger')
         log_audit_action('personal_setup_failed', {'user_id': user_id, 'reason': 'mongodb_error', 'error': str(e)})
@@ -416,7 +439,7 @@ def logout():
                 db = get_mongo_db()
                 db.sessions.delete_one({'_id': sid})
                 logger.info(f"Deleted MongoDB session for user {user_id}, SID: {sid}")
-            except errors.PyMongoError as e:
+            except PyMongoError as e:
                 logger.error(f"Failed to delete MongoDB session for SID {sid}: {str(e)}", exc_info=True)
                 log_audit_action('logout_failed', {'user_id': user_id, 'session_id': sid, 'reason': 'mongodb_error', 'error': str(e)})
         session.clear()
@@ -441,7 +464,4 @@ def logout():
         response.headers['Expires'] = '0'
         response.set_cookie(current_app.config['SESSION_COOKIE_NAME'], '', expires=0, httponly=True, secure=current_app.config.get('SESSION_COOKIE_SECURE', True))
         response.set_cookie('remember_token', '', expires=0, httponly=True, secure=True)
-
         return response
-
-
