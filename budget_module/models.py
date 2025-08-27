@@ -33,7 +33,7 @@ def initialize_app_data(app):
             db = get_db()
             db.command('ping')
             logger.info(f"{trans('general_database_connection_established', default='MongoDB connection established')}", extra={'session_id': 'no-session-id'})
-            
+   
             # Check for existing ficorerecords user
             if not db.users.find_one({'_id': 'ficorerecords'}):
                 try:
@@ -48,9 +48,9 @@ def initialize_app_data(app):
                     logger.info("Created ficorerecords user", extra={'session_id': 'no-session-id'})
                 except DuplicateKeyError:
                     logger.warning("ficorerecords user already exists", extra={'session_id': 'no-session-id'})
-            
+   
             collections = db.list_collection_names()
-            
+   
             # Define collection schemas
             collection_schemas = {
                 'users': {
@@ -164,7 +164,7 @@ def initialize_app_data(app):
                     ]
                 }
             }
-            
+   
             # Initialize collections and indexes
             for collection_name, config in collection_schemas.items():
                 if collection_name in collections:
@@ -183,7 +183,7 @@ def initialize_app_data(app):
                     except Exception as e:
                         logger.error(f"Failed to create collection {collection_name}: {str(e)}", exc_info=True, extra={'session_id': 'no-session-id'})
                         raise
-                
+   
                 # Manage indexes
                 existing_indexes = db[collection_name].index_information()
                 for index in config.get('indexes', []):
@@ -201,7 +201,7 @@ def initialize_app_data(app):
                                 if existing_index_name != '_id_':
                                     logger.warning(f"Dropping conflicting index {existing_index_name} on {collection_name} to create new one")
                                     db[collection_name].drop_index(existing_index_name)
-                    
+   
                     if not index_found:
                         try:
                             index_name = options.get('name', None)
@@ -213,6 +213,16 @@ def initialize_app_data(app):
                         except PyMongoError as e:
                             logger.error(f"Failed to create index on {collection_name}: {str(e)}", exc_info=True, extra={'session_id': 'no-session-id'})
                             raise
+            # Handle sessions collection separately without validator
+            if 'sessions' in collections:
+                db.drop_collection('sessions')
+                logger.info("Dropped existing sessions collection", extra={'session_id': 'no-session-id'})
+            db.create_collection('sessions')
+            logger.info("Created sessions collection without validator", extra={'session_id': 'no-session-id'})
+            # Create indexes for sessions
+            sessions_coll = db['sessions']
+            sessions_coll.create_index([('id', ASCENDING)], unique=True)
+            sessions_coll.create_index([('expiry', ASCENDING)], expireAfterSeconds=0)
         except Exception as e:
             logger.error(f"{trans('general_database_initialization_failed', default='Failed to initialize database')}: {str(e)}",
                         exc_info=True, extra={'session_id': 'no-session-id'})
@@ -285,7 +295,7 @@ def create_budget(db, budget_data):
         if not all(field in budget_data for field in required_fields):
             raise ValueError(trans('general_missing_budget_fields', default='Missing required budget fields'))
         budget_data['custom_categories'] = budget_data.get('custom_categories', [])
-        budget_data['session_id'] = str(budget_data.get('session_id', 'no-session-id'))  # Ensure session_id is a string
+        budget_data['session_id'] = str(budget_data.get('session_id', 'no-session-id')) # Ensure session_id is a string
         logger.debug(f"Inserting budget_data into {db.budgets.name}: {budget_data}",
                     extra={'session_id': budget_data.get('session_id', 'no-session-id')})
         result = db.budgets.insert_one(budget_data)
@@ -507,7 +517,7 @@ def create_credit_request(db, request_data):
         str: Inserted request ID
     """
     try:
-        request_data['session_id'] = str(request_data.get('session_id', 'no-session-id'))  # Ensure session_id is a string
+        request_data['session_id'] = str(request_data.get('session_id', 'no-session-id')) # Ensure session_id is a string
         result = db.credit_requests.insert_one(request_data)
         logger.info(f"Created credit request with ID: {result.inserted_id}", extra={'session_id': request_data.get('session_id', 'no-session-id')})
         return str(result.inserted_id)
@@ -594,7 +604,7 @@ def create_feedback(db, feedback_data):
         str: Inserted feedback ID
     """
     try:
-        feedback_data['session_id'] = str(feedback_data.get('session_id', 'no-session-id'))  # Ensure session_id is a string
+        feedback_data['session_id'] = str(feedback_data.get('session_id', 'no-session-id')) # Ensure session_id is a string
         result = db.feedback.insert_one(feedback_data)
         logger.info(f"Created feedback with ID: {result.inserted_id}", extra={'session_id': feedback_data.get('session_id', 'no-session-id')})
         return str(result.inserted_id)
