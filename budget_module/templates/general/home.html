@@ -36,7 +36,7 @@
         <section class="personal-section-card personal-recent-activity-fintech">
             <div class="personal-section-header-flex">
                 <h3 class="personal-section-title">{{ t('recent_activity', default='Ayyukan Kwanan Nan') }}</h3>
-                <a href="{{ url_for('summaries.all_activities', _external=True) | e }}" class="btn btn-link btn-sm p-0 text-decoration-none" id="viewAllActivities" onclick="event.preventDefault(); toggleRecentActivities();">
+                <a class="btn btn-link btn-sm p-0 text-decoration-none" id="viewAllActivities" onclick="event.preventDefault(); toggleRecentActivities();">
                     {{ t('view_all', default='Duba Duk') }}
                 </a>
             </div>
