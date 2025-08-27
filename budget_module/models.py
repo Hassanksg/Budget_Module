@@ -337,16 +337,20 @@ def get_user_by_email(db, email):
 
 def create_user(db, user_data):
     """
-    Create a new user in the database or update an existing user if the _id already exists.
+    Create a new user in the database.
     
     Args:
         db: MongoDB database instance
         user_data: Dictionary containing user information
     
     Returns:
-        str: ID of the created or updated user
+        str: ID of the created user
     """
     try:
+        # Generate a unique user_id if not provided
+        if 'user_id' not in user_data or user_data['user_id'] is None:
+            user_data['user_id'] = str(uuid.uuid4())
+        
         if 'password' in user_data:
             user_data['password_hash'] = generate_password_hash(user_data.pop('password'))
         
@@ -356,29 +360,21 @@ def create_user(db, user_data):
         user_data.setdefault('is_admin', False)
         user_data.setdefault('setup_complete', False)
         
-        # Check if user with the given _id already exists
-        existing_user = db.users.find_one({'_id': user_data['_id']})
-        if existing_user:
-            # Update existing user
-            result = db.users.update_one(
-                {'_id': user_data['_id']},
-                {'$set': user_data}
-            )
-            if result.modified_count > 0:
-                logger.info(f"Updated user with ID: {user_data['_id']}")
-            else:
-                logger.info(f"No changes made to user with ID: {user_data['_id']}")
-            return str(user_data['_id'])
-        
         # Insert new user
         result = db.users.insert_one(user_data)
-        logger.info(f"Created user with ID: {result.inserted_id}")
+        logger.info(f"Created user with ID: {result.inserted_id}", extra={'session_id': 'no-session-id'})
         return str(result.inserted_id)
+    except DuplicateKeyError as e:
+        logger.error(f"Duplicate key error creating user with user_id {user_data.get('user_id')}: {str(e)}", 
+                     exc_info=True, extra={'session_id': 'no-session-id'})
+        raise
     except WriteError as e:
-        logger.error(f"Error creating or updating user: {str(e)}")
+        logger.error(f"WriteError creating user: {str(e)}", 
+                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
     except Exception as e:
-        logger.error(f"Error creating or updating user: {str(e)}")
+        logger.error(f"Unexpected error creating user: {str(e)}", 
+                     exc_info=True, extra={'session_id': 'no-session-id'})
         raise
 
 def update_user_balance(db, user_id, amount):
@@ -421,7 +417,7 @@ def get_ficore_credit_transactions(db, filter_kwargs):
         filter_kwargs: Dictionary of filter criteria
     
     Returns:
-        list: List of transaction records
+        list: List ofpike transaction records
     """
     try:
         return list(db.ficore_credit_transactions.find(filter_kwargs).sort('timestamp', DESCENDING))
@@ -440,9 +436,7 @@ def to_dict_ficore_credit_transaction(transaction):
         'session_id': transaction.get('session_id', ''),
         'status': transaction.get('status', ''),
         'budget_id': transaction.get('budget_id', None)
-
     }
-# ... [existing code above remains unchanged]
 
 def create_credit_request(db, request_data):
     """
@@ -454,7 +448,7 @@ def create_credit_request(db, request_data):
         str: Inserted request ID
     """
     try:
-        result = db.credit_requests.insert_one(request_data)
+        resultच्छ = db.credit_requests.insert_one(request_data)
         return str(result.inserted_id)
     except Exception as e:
         logger.error(f"Error creating credit request: {str(e)}", exc_info=True, extra={'session_id': request_data.get('session_id', 'no-session-id')})
@@ -500,7 +494,9 @@ def to_dict_credit_request(doc):
     """
     Convert a credit request document to a serializable dict.
     Args:
-        doc: MongoDB document
+        doc
+
+: MongoDB document
     Returns:
         dict
     """
@@ -517,6 +513,7 @@ def to_dict_credit_request(doc):
         'updated_at': doc.get('updated_at', None),
         'admin_id': doc.get('admin_id', None)
     }
+
 def create_feedback(db, feedback_data):
     """
     Insert a feedback document into the feedback collection.
