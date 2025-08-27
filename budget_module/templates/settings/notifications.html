@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ trans('settings_notifications_title', default='Notification Settings') }} - FiCore{% endblock %}
+{% block content %}
+<div class="container mt-5" style="background-color: {{ background_color }};">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('settings.index') }}" class="back-arrow me-3" style="color: {{ text_color }};">←</a>
+        <h1 style="color: {{ text_color }};">{{ trans('settings_notifications_title', default='Notification Settings') }}</h1>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'info' }} alert-dismissible fade show" role="alert" style="background-color: {{ success_color if category == 'success' else danger_color if category == 'danger' else '#D1D5DB' }}; color: #FFFFFF;">
+                        {{ message | escape }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ trans('general_close', default='Close') | escape }}"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <div class="card card-body" style="border-color: {{ button_color }};">
+        <form method="POST" class="needs-validation" novalidate>
+            {{ form.csrf_token }}
+            <div class="form-check mb-3">
+                {{ form.email_notifications(class="form-check-input", id="email_notifications") }}
+                <label class="form-check-label" for="email_notifications" style="color: {{ text_color }};">{{ trans('general_email_notifications', default='Email Notifications') }}</label>
+            </div>
+            <div class="form-check mb-3">
+                {{ form.sms_notifications(class="form-check-input", id="sms_notifications") }}
+                <label class="form-check-label" for="sms_notifications" style="color: {{ text_color }};">{{ trans('general_sms_notifications', default='SMS Notifications') }}</label>
+            </div>
+            <div class="text-center">
+                {{ form.submit(class="btn btn-primary w-100", style="background-color: {{ button_color }}; color: #FFFFFF;") }}
+            </div>
+        </form>
+    </div>
+</div>
+<style>
+    .back-arrow {
+        font-size: 1.5rem;
+        text-decoration: none;
+        font-weight: bold;
+    }
+    .back-arrow:hover {
+        color: #2B4B9B;
+    }
+    .btn-primary:hover {
+        background-color: #2B4B9B;
+    }
+</style>
+<script>
+    (function () {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock %}
