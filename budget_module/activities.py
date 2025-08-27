@@ -5,9 +5,6 @@ from utils import get_mongo_db, logger, format_currency, format_date
 
 # Create a new Blueprint for activities
 activities_bp = Blueprint('activities', __name__)
-
----
-
 ## API Endpoints
 
 @activities_bp.route('/summary', methods=['GET'])
@@ -47,8 +44,6 @@ def summary():
             'totalExpenses': format_currency(0.0, user_currency),
             'user_email': current_user.email
         }), 500
-
----
 
 @activities_bp.route('/recent-activities', methods=['GET'])
 @login_required
