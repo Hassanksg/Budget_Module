@@ -19,7 +19,7 @@ from flask_login import LoginManager, login_required, current_user, UserMixin, l
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from jinja2.exceptions import TemplateNotFound
 from utils import get_mongo_db, logger, trans_function, initialize_tools_with_urls
-from models import initialize_app_data, create_user, get_user_by_email
+from models import initialize_app_data, create_user, get_user_by_email, User
 # Register only budget-related blueprints
 from budget import budget_bp
 from credits import credits_bp
@@ -98,29 +98,6 @@ except Exception as e:
     logger.error('MongoDB connection failed: %s', str(e))
     raise
 
-# User class defined at module level
-class User(UserMixin):
-    def __init__(self, id, email, display_name=None, role='personal'):
-        self.id = id
-        self.email = email
-        self.display_name = display_name or id
-        self.role = role
-
-    @property
-    def is_active(self):
-        user = app.extensions['mongo']['ficodb'].users.find_one({'_id': self.id})
-        return user.get('is_active', True) if user else False
-
-    def get_id(self):
-        return str(self.id)
-    
-    def get_first_name(self):
-        """Get the first name from display_name or email"""
-        if self.display_name and self.display_name != self.id:
-            return self.display_name.split()[0] if ' ' in self.display_name else self.display_name
-        return self.email.split('@')[0] if '@' in self.email else self.id
-
-
 # App setup
 def create_app():
     # Initialize extensions
@@ -150,15 +127,11 @@ def create_app():
 
     @login_manager.user_loader
     def load_user(user_id):
-        user = app.extensions['mongo']['ficodb'].users.find_one({'_id': user_id})
-        if not user:
+        db = app.extensions['mongo']['ficodb']
+        user_doc = db.users.find_one({'_id': user_id})
+        if not user_doc:
             return None
-        return User(
-            id=user['_id'],
-            email=user['email'],
-            display_name=user.get('display_name', user['_id']),
-            role=user.get('role', 'personal')
-        )
+        return User(user_doc)
 
     # Setup session
     logger.info('Creating TTL index for sessions collection')
@@ -216,18 +189,18 @@ def create_app():
                 '_id': admin_username.lower(),
                 'username': admin_username.lower(),
                 'email': admin_email.lower(),
-                'password': hashed_password,
+                'password_hash': hashed_password,
                 'is_admin': True,
                 'role': 'admin',
                 'created_at': datetime.utcnow(),
-                'lang': 'en',
+                'language': 'en',
                 'setup_complete': True,
                 'display_name': admin_username
             })
         else:
             db.users.update_one(
                 {'_id': admin_username.lower()},
-                {'$set': {'password': hashed_password}}
+                {'$set': {'password_hash': hashed_password}}
             )
 
     # Template filters and context processors
@@ -398,4 +371,3 @@ if __name__ == '__main__':
     logger.info('Starting Flask application')
     port = int(os.environ.get('PORT', 1000))  # Use 1000 as fallback for consistency
     app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
-
