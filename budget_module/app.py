@@ -20,34 +20,25 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from jinja2.exceptions import TemplateNotFound
 from utils import get_mongo_db, logger, trans_function, initialize_tools_with_urls
 from models import initialize_app_data, create_user, get_user_by_email, User
-# Register only budget-related blueprints
 from budget import budget_bp
 from credits import credits_bp
 from reports import reports_bp
-# Minimal general routes for landing/home
 from general import general_bp
-# User routes for login
 from users import users_bp
-# Admin routes for credit approvals and budget management
 from admin import admin_bp
-# Settings for profile
 from settings import settings_bp
 from translations import trans
-
-# Define role-based constants (placeholders; update with actual values if defined elsewhere)
+# Define role-based constants
 PERSONAL_TOOLS = []
 ADMIN_TOOLS = []
 PERSONAL_EXPLORE_FEATURES = []
 ADMIN_EXPLORE_FEATURES = []
 PERSONAL_NAV = []
 ADMIN_NAV = []
-
 def get_explore_features():
     return []
-
 # Load environment variables
 load_dotenv()
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -55,7 +46,6 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stderr)]
 )
 logger = logging.getLogger('ficore_app')
-
 # Initialize Flask app
 app = Flask(__name__, template_folder='templates', static_folder='static')
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -73,13 +63,11 @@ app.config.from_mapping(
     SESSION_COOKIE_NAME='ficore_session',
     SUPPORTED_LANGUAGES=['en', 'ha']
 )
-
 # Validate critical configuration
 for key in ['SECRET_KEY', 'MONGO_URI', 'ADMIN_PASSWORD']:
     if not app.config.get(key):
         logger.error(f'{key} environment variable is not set')
         raise ValueError(f'{key} must be set')
-
 # Initialize MongoDB
 logger.info('Initializing MongoDB client with URI: %s', app.config['MONGO_URI'])
 client = MongoClient(
@@ -97,7 +85,6 @@ try:
 except Exception as e:
     logger.error('MongoDB connection failed: %s', str(e))
     raise
-
 # App setup
 def create_app():
     # Initialize extensions
@@ -111,7 +98,6 @@ def create_app():
     CSRFProtect(app)
     login_manager = LoginManager(app)
     login_manager.login_view = 'users.login'
-
     # Session decorator - now requires authentication
     def ensure_session_id(f):
         @wraps(f)
@@ -124,7 +110,6 @@ def create_app():
                 logger.info(f'New session for user {current_user.id}: {session["sid"]}')
             return f(*args, **kwargs)
         return decorated_function
-
     @login_manager.user_loader
     def load_user(user_id):
         db = app.extensions['mongo']['ficodb']
@@ -132,27 +117,6 @@ def create_app():
         if not user_doc:
             return None
         return User(user_doc)
-
-    # Setup session
-    logger.info('Creating TTL index for sessions collection')
-    sessions_coll = app.extensions['mongo']['ficodb'].sessions
-    desired_ttl = 1800  # 30 minutes
-
-    # Check existing indexes
-    existing_indexes = sessions_coll.list_indexes()
-    for idx in existing_indexes:
-        if idx.get('name') == 'created_at_1':
-            if idx.get('expireAfterSeconds') != desired_ttl:
-                sessions_coll.drop_index('created_at_1')
-            break
-
-    # Create the index (will succeed if dropped or matching)
-    try:
-        sessions_coll.create_index("created_at", expireAfterSeconds=desired_ttl)
-    except OperationFailure as e:
-        if 'IndexOptionsConflict' not in str(e):
-            raise  # Re-raise if not the expected conflict
-
     # Register blueprints
     app.register_blueprint(users_bp, url_prefix='/users')
     app.register_blueprint(credits_bp, url_prefix='/credits')
@@ -161,12 +125,12 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(budget_bp, url_prefix='/budget')
     app.register_blueprint(general_bp, url_prefix='/general')
-    
+   
     # Initialize data
     with app.app_context():
         initialize_app_data(app)
         initialize_tools_with_urls(app)
-        
+       
         # Create indexes for budget collections
         db = app.extensions['mongo']['ficodb']
         for collection, indexes in [
@@ -175,15 +139,14 @@ def create_app():
         ]:
             for index in indexes:
                 db[collection].create_index(index)
-        
+       
         # Setup admin user
         admin_email = os.getenv('ADMIN_EMAIL', 'ficoreaiafrica@gmail.com')
         admin_password = os.getenv('ADMIN_PASSWORD')
         admin_username = os.getenv('ADMIN_USERNAME', 'admin')
-        
+       
         # Hash the password before checking and updating
         hashed_password = generate_password_hash(admin_password)
-
         if not get_user_by_email(db, admin_email):
             create_user(db, {
                 '_id': admin_username.lower(),
@@ -202,16 +165,13 @@ def create_app():
                 {'_id': admin_username.lower()},
                 {'$set': {'password_hash': hashed_password}}
             )
-
     # Template filters and context processors
-
     # Define functions before using them in globals
     def format_currency(value):
         try:
             return f'₦{float(value):,.2f}'
         except (ValueError, TypeError):
             return str(value)
-
     def format_date(value):
         format_str = '%B %d, %Y' if session.get('lang', 'en') == 'en' else '%d %B %Y'
         try:
@@ -222,14 +182,12 @@ def create_app():
             return str(value)
         except Exception:
             return str(value)
-
     def is_admin():
         return current_user.is_authenticated and current_user.role == 'admin'
-
     # Add 't' as an alias for 'trans' for backwards compatibility in templates
     app.jinja_env.globals.update(
         trans=trans_function,
-        t=trans_function,  # Ensure 't' is available in Jinja templates
+        t=trans_function, # Ensure 't' is available in Jinja templates
         format_currency=format_currency,
         format_date=format_date,
         is_admin=is_admin,
@@ -237,14 +195,12 @@ def create_app():
         TWITTER_URL=app.config.get('TWITTER_URL', 'https://x.com/ficoreafrica'),
         LINKEDIN_URL=app.config.get('LINKEDIN_URL', 'https://linkedin.com/company/ficoreafrica')
     )
-
     @app.template_filter('format_number')
     def format_number(value):
         try:
             return f'{float(value):,.2f}' if isinstance(value, (int, float)) else str(value)
         except (ValueError, TypeError):
             return str(value)
-
     @app.template_filter('format_datetime')
     def format_datetime(value):
         format_str = '%B %d, %Y, %I:%M %p' if session.get('lang', 'en') == 'en' else '%d %B %Y, %I:%M %p'
@@ -256,20 +212,17 @@ def create_app():
             return str(value)
         except Exception:
             return str(value)
-
     @app.template_filter('format_date')
     def format_date_filter(value):
         return format_date(value)
-
     @app.template_filter('format_currency')
     def format_currency_filter(value):
         return format_currency(value)
-
     @app.context_processor
     def inject_globals():
         lang = session.get('lang', 'en')
         from flask_login import current_user
-        
+       
         # Get role-specific navigation and tools
         if current_user.is_authenticated:
             if current_user.role == 'personal':
@@ -289,10 +242,10 @@ def create_app():
             tools_for_template = []
             explore_features_for_template = get_explore_features()
             bottom_nav_items = []
-        
+       
         return {
             'trans': trans_function,
-            't': trans_function,  # Ensure 't' is available everywhere
+            't': trans_function, # Ensure 't' is available everywhere
             'current_lang': lang,
             'available_languages': [
                 {'code': code, 'name': trans_function(f'lang_{code}', lang=lang, default=code.capitalize())}
@@ -302,7 +255,6 @@ def create_app():
             'explore_features_for_template': explore_features_for_template,
             'bottom_nav_items': bottom_nav_items
         }
-
     # Routes
     @app.route('/')
     def index():
@@ -311,7 +263,6 @@ def create_app():
                 return redirect(url_for('admin.index'))
             return redirect(url_for('general_bp.home'))
         return redirect(url_for('general_bp.landing'))
-
     @app.route('/change-language', methods=['POST'])
     def change_language():
         data = request.get_json()
@@ -325,7 +276,6 @@ def create_app():
                 )
             return jsonify({'success': True, 'message': trans_function('lang_change_success', lang=new_lang)})
         return jsonify({'success': False, 'message': trans_function('lang_invalid')}), 400
-
     @app.route('/set-language/<lang>')
     def set_language(lang):
         """Set the session language."""
@@ -337,7 +287,6 @@ def create_app():
                     {'$set': {'language': lang}}
                 )
         return redirect(request.referrer or url_for('index'))
-
     @app.route('/health')
     def health():
         try:
@@ -345,7 +294,6 @@ def create_app():
             return jsonify({'status': 'healthy'}), 200
         except Exception as e:
             return jsonify({'status': 'unhealthy', 'dependencies': str(e)}), 500
-
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
         return render_template(
@@ -353,7 +301,6 @@ def create_app():
             error=trans_function('csrf_error'),
             title=trans_function('csrf_error', lang=session.get('lang', 'en'))
         ), 400
-
     @app.errorhandler(404)
     def page_not_found(e):
         return render_template(
@@ -361,13 +308,10 @@ def create_app():
             error=str(e),
             title=trans_function('not_found', lang=session.get('lang', 'en'))
         ), 404
-
     logger.info('MongoDB client initialized')
     return app
-
 app = create_app()
-
 if __name__ == '__main__':
     logger.info('Starting Flask application')
-    port = int(os.environ.get('PORT', 1000))  # Use 1000 as fallback for consistency
+    port = int(os.environ.get('PORT', 1000)) # Use 1000 as fallback for consistency
     app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
