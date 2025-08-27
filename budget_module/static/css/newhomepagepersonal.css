@@ -1,56 +1,54 @@
-/* Define CSS Variables for Colors - Adapted to Ficore Palette */
 :root {
-    /* Light Mode Defaults - Integrated with Ficore Palette */
-    --ficore-primary-color: #1E3A8A; /* Deep Blue for primary elements, buttons, accents */
-    --ficore-background-color: #FFF8F0; /* Soft Cream for general backgrounds */
-    --ficore-text-color: #2E2E2E; /* Dark Gray for primary text */
-    --ficore-secondary-text-color: #6B7280; /* Medium Gray for secondary text (e.g., time, labels) - adapted from existing */
-    --ficore-border-color: #E5E7EB; /* Light borders/separators - adapted to fit Ficore theme */
-    --ficore-card-bg: #FFFFFF; /* White for section cards - kept for contrast on cream background */
-    --ficore-warning-bg: #FFE0B2; /* Warning background - kept as is, can be adjusted if needed */
-    --ficore-warning-text: #E65100; /* Warning text - kept as is */
-    --ficore-icon-wrapper-bg: #F8F9FA; /* Background for activity/action icons - light grayish */
-    --ficore-hover-bg: #E9ECEF; /* Hover background for interactive elements */
-    --ficore-primary-action-bg: rgba(30, 58, 138, 0.1); /* Light primary blue tint for action icons */
-    --ficore-secondary-action-bg: rgba(107, 114, 128, 0.1); /* Light secondary gray tint for service icons */
-    --ficore-success-color: #16A34A; /* Green for success */
-    --ficore-danger-color: #DC2626; /* Red for errors */
-    --ficore-gold: #D4AF37; /* Gold for balance display */
-    --ficore-gradient-primary: linear-gradient(135deg, var(--ficore-primary-color), var(--ficore-gold)); /* Gradient for headers */
-    --transition-base: 0.3s ease; /* Base transition for smooth changes */
+    --ficore-primary-color: #1E3A8A;
+    --ficore-background-color: #FFF8F0;
+    --ficore-text-color: #2E2E2E;
+    --ficore-secondary-text-color: #6B7280;
+    --ficore-border-color: #E5E7EB;
+    --ficore-card-bg: #B0DAFF;
+    --ficore-warning-bg: #FFE0B2;
+    --ficore-warning-text: #E65100;
+    --ficore-icon-wrapper-bg: #F8F9FA;
+    --ficore-hover-bg: #E9ECEF;
+    --ficore-primary-action-bg: rgba(30, 58, 138, 0.1);
+    --ficore-secondary-action-bg: rgba(107, 114, 128, 0.1);
+    --ficore-success-color: #16A34A;
+    --ficore-danger-color: #DC2626;
+    --ficore-gold: #D4AF37;
+    --ficore-gradient-primary: linear-gradient(135deg, var(--ficore-primary-color), var(--ficore-gold));
+    --ficore-active-color: #F28C28;
+    --ficore-button-hover: #182E6E;
+    --transition-base: 0.3s ease;
 }
 
 .dark-mode {
-    /* Dark Mode Overrides - Adapted to Ficore Palette */
-    --ficore-background-color: #1A1A1A; /* Dark background for the page */
-    --ficore-card-bg: #2C2C2C; /* Darker background for cards */
-    --ficore-text-color: #F8F9FA; /* Light text color */
-    --ficore-secondary-text-color: #ADB5BD; /* Lighter secondary text color */
-    --ficore-border-color: #444444; /* Darker borders/separators */
-    --ficore-warning-bg: #6A4C00; /* Darker warning background */
-    --ficore-warning-text: #FFEB3B; /* Lighter warning text */
-    --ficore-icon-wrapper-bg: #3A3A3A; /* Dark background for activity/action icons */
-    --ficore-hover-bg: #3A3A3A; /* Darker hover background */
-    --ficore-primary-action-bg: rgba(30, 58, 138, 0.2); /* Slightly more opaque primary for action icons */
-    --ficore-secondary-action-bg: rgba(107, 114, 128, 0.2); /* Slightly more opaque secondary for service icons */
-    --ficore-primary-color: #60A5FA; /* Lighter primary blue for visibility in dark mode */
-    --ficore-gold: #FCD34D; /* Lighter gold for dark mode balance display if needed */
+    --ficore-background-color: #0F172A;
+    --ficore-card-bg: #1F2937;
+    --ficore-text-color: #F8F9FA;
+    --ficore-secondary-text-color: #ADB5BD;
+    --ficore-border-color: #444444;
+    --ficore-warning-bg: #6A4C00;
+    --ficore-warning-text: #FFEB3B;
+    --ficore-icon-wrapper-bg: #3A3A3A;
+    --ficore-hover-bg: #3A3A3A;
+    --ficore-primary-action-bg: rgba(30, 58, 138, 0.2);
+    --ficore-secondary-action-bg: rgba(107, 114, 128, 0.2);
+    --ficore-primary-color: #4D6AB5;
+    --ficore-success-color: #22C55E;
+    --ficore-gold: #FCD34D;
 }
 
-/* General Layout - Updated with Ficore Variables */
 .personal-page-container {
     padding: 1rem;
-    max-width: 960px; /* Or adjust to your desired max width */
-    margin: 0 auto; /* Center the container */
-    background-color: var(--ficore-background-color); /* Apply dynamic background */
-    color: var(--ficore-text-color); /* Apply dynamic text color */
-    transition: background-color var(--transition-base), color var(--transition-base); /* Smooth transition */
+    max-width: 960px;
+    margin: 0 auto;
+    background-color: var(--ficore-background-color);
+    color: var(--ficore-text-color);
+    transition: background-color var(--transition-base), color var(--transition-base);
 }
 
-/* No-JS Warning - Updated with Ficore Variables */
 .personal-no-js-warning {
-    background-color: var(--ficore-warning-bg); /* Dynamic warning background */
-    color: var(--ficore-warning-text); /* Dynamic warning text */
+    background-color: var(--ficore-warning-bg);
+    color: var(--ficore-warning-text);
     padding: 1rem;
     border-radius: 0.5rem;
     text-align: center;
@@ -58,27 +56,26 @@
     font-weight: 500;
 }
 
-/* Section Cards - Updated with Ficore Variables */
 .personal-section-card {
-    background-color: var(--ficore-card-bg); /* Dynamic card background */
+    background-color: var(--ficore-card-bg);
     border-radius: 0.75rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Softer shadow */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     margin-bottom: 1.5rem;
     padding: 1rem;
-    transition: background-color var(--transition-base), box-shadow var(--transition-base); /* Smooth transition */
-    border: 1px solid var(--ficore-border-color); /* Added subtle border for definition */
+    transition: background-color var(--transition-base), box-shadow var(--transition-base);
+    border: 1px solid var(--ficore-border-color);
 }
 
 .dark-mode .personal-section-card {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Darker shadow in dark mode */
-    border-color: var(--ficore-border-color); /* Dynamic dark border */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: var(--ficore-border-color);
 }
 
 .personal-section-title {
-    font-size: 1.25rem; /* H3 size */
+    font-size: 1.25rem;
     font-weight: 600;
     margin-bottom: 1rem;
-    color: var(--ficore-text-color); /* Dynamic heading color */
+    color: var(--ficore-text-color);
 }
 
 .personal-section-header-flex {
@@ -88,20 +85,19 @@
     margin-bottom: 1rem;
 }
 
-/* Balance Display Card - Integrated Ficore Gold */
 .personal-balance-display-card {
-    color: #fff; /* White text for gold background (specific to this card) */
-    padding: 1rem; /* Reduced from 1.5rem to 1rem */
+    color: #fff;
+    padding: 1rem;
     position: relative;
-    overflow: hidden; /* For any background patterns if added */
-    background-color: var(--ficore-gold); /* Ficore Gold background */
+    overflow: hidden;
+    background-color: var(--ficore-gold);
 }
 
 .personal-balance-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.3rem; /* Reduced from 0.5rem */
+    margin-bottom: 0.3rem;
 }
 
 .personal-balance-label {
@@ -110,7 +106,7 @@
 }
 
 .personal-toggle-visibility-btn {
-    color: #fff; /* Stays white for contrast */
+    color: #fff;
     opacity: 0.8;
 }
 
@@ -122,7 +118,7 @@
 .personal-balance-amount-wrapper {
     display: flex;
     align-items: baseline;
-    margin-bottom: 1rem; /* Reduced from 1.5rem */
+    margin-bottom: 1rem;
 }
 
 .personal-currency-symbol {
@@ -141,7 +137,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-top: 0.8rem; /* Reduced from 1rem */
+    padding-top: 0.8rem;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -179,7 +175,6 @@
     color: #fff;
 }
 
-/* Recent Activity - Updated with Ficore Variables */
 .personal-activity-list {
     display: flex;
     flex-direction: column;
@@ -190,7 +185,7 @@
     display: flex;
     align-items: center;
     padding: 0.75rem 0;
-    border-bottom: 1px solid var(--ficore-border-color); /* Dynamic border */
+    border-bottom: 1px solid var(--ficore-border-color);
     transition: border-color var(--transition-base);
 }
 
@@ -207,7 +202,7 @@
     justify-content: center;
     align-items: center;
     border-radius: 50%;
-    background-color: var(--ficore-icon-wrapper-bg); /* Dynamic background for icons */
+    background-color: var(--ficore-icon-wrapper-bg);
     margin-right: 1rem;
     font-size: 1.2rem;
     transition: background-color var(--transition-base);
@@ -215,12 +210,12 @@
 
 .personal-activity-description {
     font-size: 0.95rem;
-    color: var(--ficore-text-color); /* Dynamic text color */
+    color: var(--ficore-text-color);
 }
 
 .personal-activity-time {
     font-size: 0.8rem;
-    color: var(--ficore-secondary-text-color); /* Dynamic secondary text color */
+    color: var(--ficore-secondary-text-color);
 }
 
 .personal-recent-activity-item.personal-no-activity {
@@ -228,10 +223,9 @@
     text-align: center;
     padding: 2rem 0;
     border-bottom: none;
-    color: var(--ficore-secondary-text-color); /* Dynamic secondary text color */
+    color: var(--ficore-secondary-text-color);
 }
 
-/* Quick Actions Grid - Updated with Ficore Variables */
 .personal-actions-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
@@ -239,23 +233,23 @@
 }
 
 .personal-quick-action-item {
-    background-color: var(--ficore-card-bg); /* Dynamic background for action items */
+    background-color: var(--ficore-card-bg);
     border-radius: 0.75rem;
     padding: 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    color: var(--ficore-text-color); /* Dynamic text color */
+    color: var(--ficore-text-color);
     transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out, color var(--transition-base);
     cursor: pointer;
-    border: 1px solid var(--ficore-border-color); /* Subtle border */
+    border: 1px solid var(--ficore-border-color);
 }
 
 .personal-quick-action-item:hover {
     transform: translateY(-3px);
-    background-color: var(--ficore-hover-bg); /* Dynamic hover background */
-    color: var(--ficore-text-color); /* Ensure text color remains readable */
+    background-color: var(--ficore-hover-bg);
+    color: var(--ficore-text-color);
 }
 
 .personal-action-icon-wrapper {
@@ -265,10 +259,10 @@
     justify-content: center;
     align-items: center;
     border-radius: 50%;
-    background-color: var(--ficore-primary-action-bg); /* Dynamic primary background for icons */
+    background-color: var(--ficore-primary-action-bg);
     margin-bottom: 0.75rem;
     font-size: 1.8rem;
-    color: var(--ficore-primary-color); /* Dynamic primary color for icons */
+    color: var(--ficore-primary-color);
     transition: background-color var(--transition-base), color var(--transition-base);
 }
 
@@ -277,7 +271,6 @@
     font-weight: 500;
 }
 
-/* Financial Snapshots - Updated with Ficore Variables */
 .personal-snapshots-summary-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -285,20 +278,20 @@
 }
 
 .personal-snapshot-item {
-    background-color: var(--ficore-card-bg); /* Dynamic background */
+    background-color: var(--ficore-card-bg);
     border-radius: 0.75rem;
     padding: 1rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
     transition: background-color var(--transition-base);
-    border: 1px solid var(--ficore-border-color); /* Subtle border */
+    border: 1px solid var(--ficore-border-color);
 }
 
 .personal-snapshot-item i {
     font-size: 1.8rem;
-    min-width: 1.8rem; /* Ensure icon doesn't shrink */
-    color: var(--ficore-primary-color); /* Icons generally primary, or can be themed individually */
+    min-width: 1.8rem;
+    color: var(--ficore-primary-color);
     transition: color var(--transition-base);
 }
 
@@ -308,24 +301,24 @@
 
 .personal-snapshot-label {
     font-size: 0.8rem;
-    color: var(--ficore-secondary-text-color); /* Dynamic secondary text color */
+    color: var(--ficore-secondary-text-color);
 }
 
 .personal-snapshot-value {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--ficore-text-color); /* Dynamic text color */
+    color: var(--ficore-text-color);
     display: flex;
     align-items: baseline;
 }
 
 .personal-snapshot-value .personal-currency-symbol {
-    font-size: 0.9em; /* Smaller symbol relative to value */
+    font-size: 0.9em;
     margin-right: 0.15rem;
 }
 
 .personal-snapshot-value .personal-amount-value {
-    font-size: 1em; /* Inherit from parent */
+    font-size: 1em;
 }
 
 .personal-status-indicator {
@@ -337,35 +330,33 @@
     margin-top: 0.5rem;
 }
 
-/* Specific status indicators - Adapted with Ficore Colors and Bootstrap vars where possible */
 #budgetStatusLabel {
-    background-color: rgba(22, 163, 74, 0.1); /* Ficore success tint */
-    color: var(--ficore-success-color); /* Ficore success color */
+    background-color: rgba(22, 163, 74, 0.1);
+    color: var(--ficore-success-color);
 }
 .dark-mode #budgetStatusLabel {
-    background-color: rgba(22, 163, 74, 0.2); /* Slightly more opaque in dark */
-    color: #D1E7DD; /* Lighter text */
+    background-color: rgba(22, 163, 74, 0.2);
+    color: #D1E7DD;
 }
 
 #billsStatusLabel {
-    background-color: var(--ficore-warning-bg); /* Ficore warning */
+    background-color: var(--ficore-warning-bg);
     color: var(--ficore-warning-text);
 }
 .dark-mode #billsStatusLabel {
-    background-color: rgba(255, 193, 7, 0.2); /* Darker yellow tint */
-    color: #FFF3CD; /* Lighter text */
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #FFF3CD;
 }
 
 #shoppingStatusLabel {
-    background-color: rgba(13, 202, 240, 0.1); /* Info cyan tint */
-    color: #055160; /* Info text */
+    background-color: rgba(13, 202, 240, 0.1);
+    color: #055160;
 }
 .dark-mode #shoppingStatusLabel {
-    background-color: rgba(13, 202, 240, 0.2); /* More opaque in dark */
-    color: #212529; /* Darker text */
+    background-color: rgba(13, 202, 240, 0.2);
+    color: #212529;
 }
 
-/* Explore Features / Services Grid - Updated with Ficore Variables */
 .personal-services-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
@@ -373,22 +364,22 @@
 }
 
 .personal-service-grid-item {
-    background-color: var(--ficore-card-bg); /* Dynamic background */
+    background-color: var(--ficore-card-bg);
     border-radius: 0.75rem;
     padding: 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    color: var(--ficore-text-color); /* Dynamic text color */
+    color: var(--ficore-text-color);
     transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out, color var(--transition-base);
     cursor: pointer;
-    border: 1px solid var(--ficore-border-color); /* Subtle border */
+    border: 1px solid var(--ficore-border-color);
 }
 
 .personal-service-grid-item:hover {
     transform: translateY(-3px);
-    background-color: var(--ficore-hover-bg); /* Dynamic hover background */
+    background-color: var(--ficore-hover-bg);
     color: var(--ficore-text-color);
 }
 
@@ -399,10 +390,10 @@
     justify-content: center;
     align-items: center;
     border-radius: 50%;
-    background-color: var(--ficore-secondary-action-bg); /* Dynamic secondary background for icons */
+    background-color: var(--ficore-secondary-action-bg);
     margin-bottom: 0.75rem;
     font-size: 1.8rem;
-    color: var(--ficore-secondary-text-color); /* Dynamic secondary color for icons */
+    color: var(--ficore-secondary-text-color);
     transition: background-color var(--transition-base), color var(--transition-base);
 }
 
@@ -411,10 +402,9 @@
     font-weight: 500;
 }
 
-/* Promotion Card - Updated with Ficore Primary */
 .personal-promotion-card {
-    background-color: var(--ficore-primary-color); /* Dynamic primary color for promotion */
-    color: #fff; /* Text remains white for contrast on primary color */
+    background-color: var(--ficore-primary-color);
+    color: #fff;
     padding: 1.5rem;
     text-align: center;
     display: flex;
@@ -435,20 +425,19 @@
     height: auto;
     border-radius: 0.5rem;
     margin-bottom: 1rem;
-    /* Consider object-fit: cover; if images might have inconsistent aspect ratios */
 }
 
 .personal-promotion-text h4 {
     font-size: 1.2rem;
     margin-bottom: 0.5rem;
-    color: #fff; /* Stays white */
+    color: #fff;
 }
 
 .personal-promotion-text p {
     font-size: 0.9rem;
     margin-bottom: 1rem;
     opacity: 0.9;
-    color: #fff; /* Stays white */
+    color: #fff;
 }
 
 .personal-promotion-card .btn-outline-light {
@@ -459,10 +448,9 @@
 
 .personal-promotion-card .btn-outline-light:hover {
     background-color: #fff;
-    color: var(--ficore-primary-color); /* Uses the dynamic primary color on hover */
+    color: var(--ficore-primary-color);
 }
 
-/* Animation for click */
 .animate-click {
     animation: personal-click-effect 0.2s ease-out;
 }
@@ -479,14 +467,13 @@
     }
 }
 
-/* Responsive adjustments */
-@media (min-width: 576px) { /* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
     .personal-page-container {
         padding: 1.5rem;
     }
 
     .personal-balance-amount-wrapper {
-        margin-bottom: 1.5rem; /* Adjusted for smaller screens */
+        margin-bottom: 1.5rem;
     }
 
     .personal-quick-action-item,
@@ -501,7 +488,7 @@
     }
 
     .personal-promotion-image {
-        max-width: 120px; /* Adjust as needed */
+        max-width: 120px;
         margin-bottom: 0;
     }
 
@@ -510,7 +497,7 @@
     }
 }
 
-@media (min-width: 768px) { /* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
     .personal-page-container {
         padding: 2rem;
     }
@@ -518,7 +505,7 @@
     .personal-actions-grid,
     .personal-snapshots-summary-grid,
     .personal-services-grid {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* More columns for wider screens */
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }
 
     .personal-section-card {
@@ -526,9 +513,9 @@
     }
 }
 .quick-tips-margin {
-    margin-top: 4rem !important; /* To adjust this value as needed */
+    margin-top: 4rem !important;
 }
-/* === Breadcrumb Styling - Adapted with Ficore Primary === */
+
 .breadcrumb {
     background-color: transparent;
     padding: clamp(0.5rem, 2vw, 0.75rem) clamp(0.5rem, 2vw, 0.75rem);
@@ -538,7 +525,7 @@
     flex-wrap: nowrap;
     overflow-x: auto;
     white-space: nowrap;
-    -webkit-overflow-scrolling: touch; /* Smooth scrolling on touch devices */
+    -webkit-overflow-scrolling: touch;
 }
 
 .breadcrumb-item {
@@ -556,7 +543,7 @@
 }
 
 .breadcrumb-item.active {
-    color: var(--ficore-secondary-text-color);
+    color: var(--ficore-active-color);
     font-weight: 500;
 }
 
@@ -564,7 +551,6 @@
     overflow-x: hidden;
 }
 
-/* === Tool Header Styling - Updated with Ficore Gradient === */
 .tool-header {
     background: var(--ficore-gradient-primary);
     color: white;
@@ -572,10 +558,9 @@
     border-radius: clamp(0.3rem, 1vw, 0.5rem);
     margin-bottom: clamp(1rem, 4vw, 1.5rem);
     text-align: center;
-    min-height: 8vh; /* Ensure minimum height for small screens */
+    min-height: 8vh;
 }
 
-/* Override breadcrumb styles within tool-header */
 .tool-header .breadcrumb {
     border-bottom: none;
     margin-bottom: clamp(0.25rem, 1vw, 0.5rem);
@@ -594,7 +579,6 @@
     font-weight: 600;
 }
 
-/* === Tool Header Buttons === */
 .tool-header .btn-group {
     display: flex;
     justify-content: center;
@@ -612,8 +596,8 @@
     height: clamp(36px, 10vw, 40px);
     padding: 0;
     overflow: hidden;
-    font-size: clamp(0.9rem, 3vw, 1rem); /* Ensure icons scale */
-    touch-action: manipulation; /* Improve touch responsiveness */
+    font-size: clamp(0.9rem, 3vw, 1rem);
+    touch-action: manipulation;
     transition: all var(--transition-base);
 }
 
@@ -629,8 +613,7 @@
     color: #FFFFFF;
 }
 
-/* === Responsive Breakpoints === */
-@media (max-width: 576px) { /* Extra small devices (phones, smartwatches) */
+@media (max-width: 576px) {
     .breadcrumb {
         font-size: clamp(0.75rem, 2.8vw, 0.85rem);
         padding: clamp(0.4rem, 2vw, 0.6rem) clamp(0.5rem, 2.5vw, 0.75rem);
@@ -647,7 +630,7 @@
     }
 }
 
-@media (min-width: 577px) and (max-width: 768px) { /* Small devices (tablets, larger phones) */
+@media (min-width: 577px) and (max-width: 768px) {
     .tool-header .btn-group {
         flex-wrap: wrap;
         gap: clamp(0.3rem, 1.2vw, 0.4rem);
@@ -660,7 +643,7 @@
     }
 }
 
-@media (min-width: 769px) and (max-width: 992px) { /* Medium devices (tablets, small laptops) */
+@media (min-width: 769px) and (max-width: 992px) {
     .tool-header .btn-group {
         gap: clamp(0.4rem, 1.5vw, 0.5rem);
     }
@@ -671,13 +654,13 @@
     }
 }
 
-@media (min-width: 993px) and (max-width: 1200px) { /* Large devices (laptops, desktops) */
+@media (min-width: 993px) and (max-width: 1200px) {
     .tool-header {
         padding: clamp(0.8rem, 2vw, 1rem);
     }
 }
 
-@media (min-width: 1201px) { /* Extra large devices (large desktops, 4K) */
+@media (min-width: 1201px) {
     .tool-header {
         padding: clamp(1rem, 1.5vw, 1.2rem);
     }
@@ -687,7 +670,7 @@
     }
 }
 
-@media (max-width: 360px) { /* Ultra-small devices (e.g., foldables, narrow phones) */
+@media (max-width: 360px) {
     .breadcrumb {
         font-size: clamp(0.7rem, 3vw, 0.8rem);
         padding: clamp(0.3rem, 1.8vw, 0.5rem) clamp(0.4rem, 2vw, 0.6rem);
@@ -700,7 +683,7 @@
     }
 }
 
-@media (max-height: 400px) { /* Low-height devices (e.g., landscape phones, foldables) */
+@media (max-height: 400px) {
     .tool-header {
         padding: clamp(0.5rem, 2vh, 0.75rem) 0;
         margin-bottom: clamp(0.5rem, 2vh, 1rem);
@@ -712,30 +695,27 @@
     }
 }
 
-/* High-density displays (Retina, 4K) */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
     .tool-header {
         border-radius: clamp(0.4rem, 1vw, 0.6rem);
     }
 
     .tool-header .btn {
-        border-width: 1.5px; /* Slightly thicker borders for clarity */
+        border-width: 1.5px;
     }
 }
 
-/* Accessibility: Ensure minimum touch target size for touch devices */
 @media (pointer: coarse) {
     .tool-header .btn {
         min-width: 44px;
-        min-height: 44px; /* Minimum touch target size per WCAG */
+        min-height: 44px;
     }
 }
 
-/* Dark Mode Adjustments for Specific Elements */
 .dark-mode .personal-balance-display-card {
-    background-color: var(--ficore-gold); /* Keep gold, but ensure contrast if needed */
+    background-color: var(--ficore-gold);
 }
 
 .dark-mode .personal-promotion-card {
-    background-color: var(--ficore-primary-color); /* Dynamic in dark */
+    background-color: var(--ficore-primary-color);
 }
