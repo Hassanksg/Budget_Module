@@ -161,23 +161,6 @@ def initialize_app_data(app):
                     'indexes': [
                         {'key': [('user_id', ASCENDING), ('timestamp', DESCENDING)]}
                     ]
-                },
-                'sessions': {
-                    'validator': {
-                        '$jsonSchema': {
-                            'bsonType': 'object',
-                            'required': ['_id', 'user_id', 'timestamp'],
-                            'properties': {
-                                '_id': {'bsonType': 'string'},
-                                'user_id': {'bsonType': 'string'},
-                                'timestamp': {'bsonType': 'date'},
-                                'data': {'bsonType': 'object'}
-                            }
-                        }
-                    },
-                    'indexes': [
-                        {'key': [('user_id', ASCENDING), ('timestamp', DESCENDING)]}
-                    ]
                 }
             }
 
