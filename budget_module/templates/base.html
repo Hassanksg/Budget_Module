@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{{ t('general_app_description', default='FiCore Africa: Empowering financial growth across Africa') | e }}">
-    <meta name="keywords" content="{% if current_user.is_authenticated and current_user.role == 'personal' %}personal finance, budgeting, savings, ficore credits, financial planning, Africa{% else %}personal finance, inventory management, ficore credits, debtors, creditors, Africa{% endif %}">
+    <meta name="keywords" content="{% if current_user.is_authenticated and current_user.role == 'personal' %}personal finance, budgeting, savings, ficore credits, financial planning, Africa{% else %}public finance, fintech, small business, budgeting, Africa{% endif %}">
     <meta name="author" content="FiCore">
     <meta name="csrf-token" content="{{ csrf_token() | e }}">
     <meta name="robots" content="index, follow">
@@ -30,7 +30,7 @@
         <div class="header-left">
             {% if current_user.is_authenticated %}
                 <a class="profile-link" href="{{ url_for('general_bp.home') if current_user.role == 'personal' else url_for('general_bp.home') | e }}" aria-label="{{ t('general_ficore_africa', default='FiCore Africa') | e }}">
-                    <img src="{{ current_user.profile_picture if current_user.profile_picture else url_for('static', filename='img/default_profile.png') | e }}" alt="{{ t('general_user_profile_picture', default='User Profile Picture') | e }}" class="profile-avatar">
+                    <img src="{{ current_user.profile_picture if current_user.profile_picture else url_for('static', filename='img/default_profile.png') | e }}" alt="{{ t('general_user_profile_picture', default='User profile picture') | e }}" class="user-profile-picture">
                     <span class="greeting-text">{{ t('general_hi_user', default='Hi') | e }}, {{ current_user.display_name | default(current_user.id) | e }}</span>
                 </a>
             {% else %}
@@ -40,25 +40,24 @@
             {% endif %}
         </div>
         <div class="header-right">
-            <button class="icon-btn help-icon-btn" onclick="location.href='{% if current_user.is_authenticated %}{{ url_for('settings.profile') | e }}{% else %}{{ url_for('general_bp.contact') | e }}{% endif %}'" data-bs-toggle="tooltip" data-bs-title="{{ t('general_help_tooltip', default='Get help') | e }}" aria-label="{{ t('general_help', default='Help') | e }}">
+            <button class="icon-btn help-icon-btn" onclick="location.href='{% if current_user.is_authenticated %}{{ url_for('settings.profile') | e }}{% else %}{{ url_for('general_bp.contact') | e }}{% endif %}'" data-bs-toggle="tooltip" data-bs-title="{{ t('general_help_tooltip', default='Get help or contact support') | e }}">
                 <i class="bi bi-question-circle"></i>
                 <span class="help-text">{{ t('general_help', default='HELP') | e }}</span>
             </button>
-            <button class="icon-btn language-toggle" id="languageToggle" onclick="toggleLanguage()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language_toggle_tooltip', default='Toggle language') | e }}" aria-label="{{ t('general_language_toggle', default='Toggle language') | e }}">
+            <button class="icon-btn language-toggle" id="languageToggle" onclick="toggleLanguage()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language_toggle_tooltip', default='Toggle language') | e }}">
                 <i class="bi bi-globe"></i>
                 <span id="languageText">{{ 'ENGLISH' if lang == 'en' else 'HAUSA' }}</span>
             </button>
-            <button class="icon-btn" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+            <button class="icon-btn" id="darkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}">
                 <i class="bi bi-moon-stars"></i>
             </button>
-            <button class="icon-btn notification-bell" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-toggle="tooltip" data-bs-title="{{ t('general_notifications_tooltip', default='View notifications') | e }}" aria-label="{{ t('general_notifications', default='Notifications') | e }}">
+            <button class="icon-btn notification-bell" id="notificationBell" data-bs-toggle="modal" data-bs-target="#notificationModal" data-bs-toggle="tooltip" data-bs-title="{{ t('general_notification_tooltip', default='View notifications') | e }}">
                 <i class="bi bi-bell"></i>
                 <span class="notification-badge badge bg-danger rounded-circle d-none" id="notificationBadge">0</span>
             </button>
         </div>
     </header>
 
-    {# Original navbar for unauthenticated users #}
     {% if not current_user.is_authenticated %}
         <nav class="navbar navbar-expand-lg bg-light">
             <div class="container-fluid">
@@ -68,28 +67,28 @@
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == ('general_bp.home' if request.blueprint == 'personal' else 'general_bp.home') %}active{% endif %}" href="{{ url_for('general_bp.home') if request.blueprint == 'personal' else url_for('general_bp.home') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_home_tooltip', default='Go to homepage') | e }}" aria-current="{% if request.endpoint == ('general_bp.home' if request.blueprint == 'personal' else 'general_bp.home') %}page{% endif %}">{{ t('general_home', default='Home') | e }}</a>
+                            <a class="nav-link {% if request.endpoint == ('general_bp.home' if request.blueprint == 'personal' else 'general_bp.home') %}active{% endif %}" href="{{ url_for('general_bp.home') | e }}">{{ t('general_home', default='Home') | e }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'general_bp.about' %}active{% endif %}" href="{{ url_for('general_bp.about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about_tooltip', default='Learn more about FiCore') | e }}" aria-current="{% if request.endpoint == 'general_bp.about' %}page{% endif %}">{{ t('general_about', default='About') | e }}</a>
+                            <a class="nav-link {% if request.endpoint == 'general_bp.about' %}active{% endif %}" href="{{ url_for('general_bp.about') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_about', default='About') | e }}">{{ t('general_about', default='About') | e }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'general_bp.contact' %}active{% endif %}" href="{{ url_for('general_bp.contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact_tooltip', default='Get in touch') | e }}" aria-current="{% if request.endpoint == 'general_bp.contact' %}page{% endif %}">{{ t('general_contact', default='Contact') | e }}</a>
+                            <a class="nav-link {% if request.endpoint == 'general_bp.contact' %}active{% endif %}" href="{{ url_for('general_bp.contact') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_contact', default='Contact') | e }}">{{ t('general_contact', default='Contact') | e }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'users.login' %}active{% endif %}" href="{{ url_for('users.login') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_login_tooltip', default='Log in to your account') | e }}" aria-current="{% if request.endpoint == 'users.login' %}page{% endif %}">{{ t('general_login', default='Login') | e }}</a>
+                            <a class="nav-link {% if request.endpoint == 'users.login' %}active{% endif %}" href="{{ url_for('users.login') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_login', default='Login') | e }}">{{ t('general_login', default='Login') | e }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'users.signup' %}active{% endif %}" href="{{ url_for('users.signup') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_signup_tooltip', default='Create a new account') | e }}" aria-current="{% if request.endpoint == 'users.signup' %}page{% endif %}">{{ t('general_signup', default='Sign Up') | e }}</a>
+                            <a class="nav-link {% if request.endpoint == 'users.signup' %}active{% endif %}" href="{{ url_for('users.signup') | e }}" data-bs-toggle="tooltip" data-bs-title="{{ t('general_signup', default='Sign Up') | e }}">{{ t('general_signup', default='Sign Up') | e }}</a>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link btn btn-link language-toggle" id="navLanguageToggle" onclick="toggleLanguage()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language_toggle_tooltip', default='Toggle language') | e }}" aria-label="{{ t('general_language_toggle', default='Toggle language') | e }}">
+                            <button class="nav-link btn btn-link language-toggle" id="navLanguageToggle" onclick="toggleLanguage()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_language_toggle_tooltip', default='Toggle language') | e }}">
                                 <i class="bi bi-globe"></i>
                                 <span id="navLanguageText">{{ 'ENGLISH' if lang == 'en' else 'HAUSA' }}</span>
                             </button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link btn btn-link" id="navDarkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}" aria-label="{{ t('general_mode_toggle_dark', default='Toggle dark mode') | e }}">
+                            <button class="nav-link btn btn-link" id="navDarkModeToggle" onclick="toggleDarkMode()" data-bs-toggle="tooltip" data-bs-title="{{ t('general_mode_toggle_tooltip_switch_to_dark', default='Switch to dark mode') | e }}">
                                 <i class="bi bi-moon-stars"></i>
                             </button>
                         </li>
@@ -136,8 +135,8 @@
         <div class="footer-wrapper">
             <footer class="footer" role="contentinfo">
                 <div class="container-fluid">
-                    <p>{{ t('general_about_ficore_africa', default='About FiCore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2025') | e }}</p>
-                    <p class="footer-disclaimer"><i class="bi bi-shield-fill-check me-2" aria-hidden="true"></i> {{ t('general_disclaimer', default='FiCore is not a bank and does not hold or move funds.') | e }} <a href="{{ url_for('general_bp.about') | e }}">{{ t('general_learn_more', default='Learn more') | e }}</a></p>
+                    <p>{{ t('general_about_ficore_africa', default='About FiCore Africa') | e }}: {{ t('general_empowering_financial_growth', default='Empowering financial growth across Africa since 2022') | e }}</p>
+                    <p class="footer-disclaimer"><i class="bi bi-shield-fill-check me-2" aria-hidden="true"></i> {{ t('general_disclaimer', default='FiCore is not a bank and does not hold or move funds.') | e }}</p>
                     <div class="footer-links">
                         <a href="{{ url_for('general_bp.terms') | e }}">{{ t('general_terms_of_service', default='Terms of Service') | e }}</a>
                         <a href="{{ url_for('general_bp.privacy') | e }}">{{ t('general_privacy_policy', default='Privacy Policy') | e }}</a>
@@ -187,7 +186,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://www.gstatic.com/dialogflow-console/fast/messenger-bootstrap.js"></script>
     <df-messenger
       intent="WELCOME"
@@ -442,11 +441,7 @@
             if (window.isAuthenticatedContentBlocked) return;
             try {
                 const endpoint = {% if current_user.is_authenticated %}
-                    {% if current_user.role == 'personal' %}
-                        '{{ url_for("summaries.notification_count") | e }}'
-                    {% else %}
-                        '{{ url_for("summaries.notification_count") | e }}'
-                    {% endif %}
+                    '{{ url_for("activities.summary") | e }}'
                 {% else %}
                     '';
                 {% endif %};
@@ -478,11 +473,7 @@
             }
             try {
                 const endpoint = {% if current_user.is_authenticated %}
-                    {% if current_user.role == 'personal' %}
-                        '{{ url_for("summaries.notifications") | e }}'
-                    {% else %}
-                        '{{ url_for("summaries.notifications") | e }}'
-                    {% endif %}
+                    '{{ url_for("activities.recent_activities") | e }}'
                 {% else %}
                     '';
                 {% endif %};
@@ -535,8 +526,8 @@
                                     <i class="bi ${getNotificationIcon(notification.type)} ${notification.read ? 'text-muted' : 'text-primary'}"></i>
                                 </div>
                                 <div class="notification-content">
-                                    <div class="notification-description fw-semibold">${notification.message}</div>
-                                    <div class="notification-time text-muted">${formatTimeAgo(notification.timestamp)}</div>
+                                    <div class="notification-description fw-semibold">${notification.message || notification.action}</div>
+                                    <div class="notification-time text-muted">${notification.date || formatTimeAgo(notification.timestamp)}</div>
                                 </div>
                             </div>
                         </div>
